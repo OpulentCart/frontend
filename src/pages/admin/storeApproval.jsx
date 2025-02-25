@@ -8,6 +8,10 @@ const ApproveStore = () => {
   const [error, setError] = useState("");
   const [selectedTab, setSelectedTab] = useState("pending"); // "pending" or "approved"
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   useEffect(() => {
     fetchStores();
   }, []);
@@ -45,6 +49,12 @@ const ApproveStore = () => {
 
   const filteredStores = stores.filter((store) => store.status === selectedTab);
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredStores.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredStores.length / itemsPerPage);
+
   return (
     <div className="p-10 mt-5">
       <h1 className="text-3xl font-bold mb-6 text-center">Approve Stores</h1>
@@ -55,7 +65,10 @@ const ApproveStore = () => {
           className={`px-6 py-2 border-b-2 font-semibold ${
             selectedTab === "pending" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500"
           } focus:outline-none transition`}
-          onClick={() => setSelectedTab("pending")}
+          onClick={() => {
+            setSelectedTab("pending");
+            setCurrentPage(1);
+          }}
         >
           Pending Stores
         </button>
@@ -63,7 +76,10 @@ const ApproveStore = () => {
           className={`px-6 py-2 border-b-2 font-semibold ${
             selectedTab === "approved" ? "border-green-500 text-green-600" : "border-transparent text-gray-500"
           } focus:outline-none transition`}
-          onClick={() => setSelectedTab("approved")}
+          onClick={() => {
+            setSelectedTab("approved");
+            setCurrentPage(1);
+          }}
         >
           Approved Stores
         </button>
@@ -71,12 +87,12 @@ const ApproveStore = () => {
 
       {error && <p className="text-center text-red-500 mb-4">{error}</p>}
 
-      {/* Full Page Loader */}
+      {/* Loader */}
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin h-12 w-12 border-4 border-blue-400 border-t-transparent rounded-full"></div>
         </div>
-      ) : filteredStores.length > 0 ? (
+      ) : currentItems.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full max-w-6xl mx-auto bg-white border border-gray-300 shadow-md rounded-lg">
             <thead>
@@ -90,7 +106,7 @@ const ApproveStore = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredStores.map((store) => (
+              {currentItems.map((store) => (
                 <tr key={store.vendor_id} className="border-b hover:bg-gray-100 transition">
                   <td className="py-4 px-6">{store.store_name}</td>
                   <td className="py-4 px-6">{store.store_description}</td>
@@ -131,6 +147,39 @@ const ApproveStore = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-2 mt-5">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 disabled:opacity-50"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </button>
+
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index}
+                  className={`px-4 py-2 rounded-md ${
+                    currentPage === index + 1 ? "bg-yellow-500 text-white" : "bg-gray-300 hover:bg-gray-400"
+                  }`}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 disabled:opacity-50"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <p className="text-center text-gray-600 text-lg mt-4">

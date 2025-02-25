@@ -1,18 +1,16 @@
 import React from "react";
-import Sidebar from "../pages/admin/sidebar"; // Ensure correct import
+import Sidebar from "../components/sidebar"; // Updated import path
 import { Outlet } from "react-router-dom";
 
 const AdminLayout = () => {
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar - No fixed positioning */}
-      <div className="w-64 h-screen bg-gray-800 mt-15">
-        <Sidebar />
-      </div>
+      {/* Sidebar */}
+      <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 p-5 bg-gray-100">
-        <Outlet /> {/* Admin pages will be rendered here */}
+      <div className="flex-1 p-5 bg-gray-100 overflow-auto">
+        <Outlet /> {/* This renders the selected admin route */}
       </div>
     </div>
   );

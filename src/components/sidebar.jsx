@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 
 const Sidebar = () => {
   return (
-    <div className="w-64 h-screen bg-gray-900 text-white p-5 absolute">
+    <div className="w-64 bg-gray-900 text-white p-5 min-h-screen mt-10">
       <h2 className="text-lg font-bold mb-5">Admin Panel</h2>
       <ul>
         <li className="mb-2">

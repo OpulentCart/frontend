@@ -6,7 +6,11 @@ const AdminProductApproval = () => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState("");
-  const [selectedTab, setSelectedTab] = useState("pending"); // "pending" or "approved"
+  const [selectedTab, setSelectedTab] = useState("pending");
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 5; // Change this as needed
 
   useEffect(() => {
     fetchProducts();
@@ -23,10 +27,10 @@ const AdminProductApproval = () => {
       }
   
       const allProducts = res.data.products.map((product) => ({
-        id: product.product_id, // Correct field
+        id: product.product_id,
         name: product.name,
         brand: product.brand,
-        description: product.description?.trim() || "No description provided", // Fix description
+        description: product.description?.trim() || "No description provided",
         status: product.status,
       }));
   
@@ -38,7 +42,6 @@ const AdminProductApproval = () => {
       setLoading(false);
     }
   };
-  
 
   const updateProductStatus = async (id, status) => {
     try {
@@ -58,7 +61,14 @@ const AdminProductApproval = () => {
     }
   };
 
+  // Filter products based on tab
   const filteredProducts = products.filter((product) => product.status === selectedTab);
+
+  // Pagination logic
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const paginatedProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   return (
     <div className="p-10 mt-5">
@@ -70,7 +80,7 @@ const AdminProductApproval = () => {
           className={`px-6 py-2 border-b-2 font-semibold ${
             selectedTab === "pending" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500"
           } focus:outline-none transition`}
-          onClick={() => setSelectedTab("pending")}
+          onClick={() => { setSelectedTab("pending"); setCurrentPage(1); }}
         >
           Pending Products
         </button>
@@ -78,7 +88,7 @@ const AdminProductApproval = () => {
           className={`px-6 py-2 border-b-2 font-semibold ${
             selectedTab === "approved" ? "border-green-500 text-green-600" : "border-transparent text-gray-500"
           } focus:outline-none transition`}
-          onClick={() => setSelectedTab("approved")}
+          onClick={() => { setSelectedTab("approved"); setCurrentPage(1); }}
         >
           Approved Products
         </button>
@@ -91,7 +101,7 @@ const AdminProductApproval = () => {
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin h-12 w-12 border-4 border-blue-400 border-t-transparent rounded-full"></div>
         </div>
-      ) : filteredProducts.length > 0 ? (
+      ) : paginatedProducts.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full max-w-6xl mx-auto bg-white border border-gray-300 shadow-md rounded-lg">
             <thead>
@@ -104,7 +114,7 @@ const AdminProductApproval = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <tr key={product.id} className="border-b hover:bg-gray-100 transition">
                   <td className="py-4 px-6">{product.name}</td>
                   <td className="py-4 px-6">{product.brand}</td>
@@ -144,6 +154,38 @@ const AdminProductApproval = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center space-x-2 mt-5">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 disabled:opacity-50"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </button>
+
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index}
+                  className={`px-4 py-2 rounded-md ${
+                    currentPage === index + 1 ? "bg-yellow-500 text-white" : "bg-gray-300 hover:bg-gray-400"
+                  }`}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 disabled:opacity-50"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+
         </div>
       ) : (
         <p className="text-center text-gray-600 text-lg mt-4">
