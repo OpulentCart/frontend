@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd"; // Import Ant Design message component
-
-
-
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "../redux/slices/authSlice"; // Import Redux action
+import { message } from "antd";
 
 function LoginPage() {
-
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,14 +24,13 @@ function LoginPage() {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
-        localStorage.setItem("user_role", data.role);
 
-        message.success("Login successful! Redirecting..."); // Show success message
+        // Dispatch action to store authentication data in Redux
+        dispatch(loginSuccess(data));
 
-        window.dispatchEvent(new Event("storage"));
-        setTimeout(() => navigate("/"), 1000); // Redirect after 1s
+        message.success("Login successful! Redirecting...");
+
+        setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
         message.error(errorData.message || "Login failed. Please try again.");
@@ -44,8 +42,6 @@ function LoginPage() {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <div className="min-h-screen bg-[#0a192f] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -63,7 +59,7 @@ function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-        <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300">
                 Email address
@@ -120,10 +116,11 @@ function LoginPage() {
                 type="submit"
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-black bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
               >
-               {loading ? "Signing in..." : "Sign in"}
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
+
           {/* Divider */}
           <div className="mt-6 relative">
             <div className="absolute inset-0 flex items-center">
@@ -162,5 +159,3 @@ function LoginPage() {
 }
 
 export default LoginPage;
-
-
