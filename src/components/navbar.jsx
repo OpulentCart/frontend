@@ -90,7 +90,10 @@ function Navbar() {
             <Link to="/" className="text-white text-lg hover:text-yellow-400">Home</Link>
             <Link to="/shop" className="text-white text-lg hover:text-yellow-400">Shop</Link>
             {isAuthenticated && userRole === "vendor" && (
+              <>
               <Link to="/store-form" className="text-white text-lg hover:text-yellow-400">Add Store</Link>
+              <Link to="/product-form" className="text-white text-lg hover:text-yellow-400">Add Product</Link>
+            </>
             )}
             <Link to="/about" className="text-white text-lg hover:text-yellow-400">About Us</Link>
             <Link to="/contact" className="text-white text-lg hover:text-yellow-400">Contact</Link>

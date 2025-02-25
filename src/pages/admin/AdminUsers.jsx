@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Sidebar from "../components/sidebar";
+//import Sidebar from "../components/sidebar";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -20,8 +20,7 @@ const AdminUsers = () => {
 
   return (
     <div className="flex h-screen mt-5">
-      <Sidebar />
-      <div className="flex-1 bg-gray-100 p-10 ml-64">
+      <div className="flex-1 bg-gray-100 p-10">
         <h1 className="text-2xl font-bold mb-4">Total Users</h1>
 
         <table className="min-w-full bg-white border border-gray-200">
