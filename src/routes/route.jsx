@@ -10,10 +10,7 @@ import AdminDashboard from '../pages/admin/adminDashboard';
 import ProductApproval from '../pages/admin/productApproval';
 import StoreApproval from '../pages/admin/storeApproval';
 import AdminLayout from '../layouts/AdminLayout';
-
-import AdminUsers from '../pages/AdminUsers';
 import Shop from '../pages/shop';
-
 import AdminUsers from '../pages/admin/AdminUsers';
 
 
