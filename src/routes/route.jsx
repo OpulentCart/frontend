@@ -11,6 +11,7 @@ import ProductApproval from '../pages/productApproval';
 import StoreApproval from '../pages/storeApproval';
 import AdminLayout from '../layouts/AdminLayout';
 import AdminUsers from '../pages/AdminUsers';
+import Shop from '../pages/shop';
 
 function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ function AppRoutes() {
       <Route path="/store-form" element={< VendorForm/>} />
       <Route path="/product-form" element={< CreateProductForm/>} />
       <Route path="/contact" element={< ContactUs/>} />
+      <Route path="/shop" element={< Shop/>} />
       <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="stores" element={<StoreApproval />} />
