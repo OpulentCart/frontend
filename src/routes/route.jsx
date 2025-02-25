@@ -6,11 +6,11 @@ import ForgotPasswordPage from '../pages/forgot';
 import VendorForm from '../pages/vendorForm';
 import ContactUs from '../pages/contact';
 import CreateProductForm from '../pages/productForm';
-import AdminDashboard from '../pages/adminDashboard';
-import ProductApproval from '../pages/productApproval';
-import StoreApproval from '../pages/storeApproval';
+import AdminDashboard from '../pages/admin/adminDashboard';
+import ProductApproval from '../pages/admin/productApproval';
+import StoreApproval from '../pages/admin/storeApproval';
 import AdminLayout from '../layouts/AdminLayout';
-import AdminUsers from '../pages/AdminUsers';
+import AdminUsers from '../pages/admin/AdminUsers';
 
 function AppRoutes() {
   return (
