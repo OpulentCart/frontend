@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { loginSuccess } from "../redux/slices/authSlice"; // Import Redux action
+import { login } from "../redux/slices/authSlice"; // Import Redux action
 import { message } from "antd";
 
 function LoginPage() {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,11 +25,14 @@ function LoginPage() {
       if (response.ok) {
         const data = await response.json();
 
-        // Dispatch action to store authentication data in Redux
-        dispatch(loginSuccess(data));
+        // Dispatch tokens & role to Redux
+        dispatch(login({ 
+          access: data.access, 
+          refresh: data.refresh, 
+          role: data.role 
+        }));
 
         message.success("Login successful! Redirecting...");
-
         setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
