@@ -25,6 +25,7 @@ function Navbar() {
 
   const handleLogout = () => {
     dispatch(logout());
+    sessionStorage.removeItem("refresh_token"); // Ensure refresh token is cleared
     navigate("/");
   };
 
@@ -81,7 +82,7 @@ function Navbar() {
             )}
 
             {/* Profile Icon & Dropdown */}
-            {authToken && (
+            {authToken ? (
               <div className="relative group">
                 <button className="icon-link flex items-center space-x-2">
                   <FiUser size={26} />
@@ -98,6 +99,19 @@ function Navbar() {
                   </button>
                 </div>
               </div>
+            ) : (
+              <>
+                <Link to="/login">
+                  <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md">
+                    Login
+                  </button>
+                </Link>
+                <Link to="/signup">
+                  <button className="bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
+                    Sign Up
+                  </button>
+                </Link>
+              </>
             )}
           </div>
 
@@ -129,21 +143,23 @@ function Navbar() {
             {authToken ? (
               <button
                 onClick={handleLogout}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition duration-200 shadow-md hover:shadow-lg"
+                className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md"
               >
                 Logout
               </button>
             ) : (
-              <>
               <div className="flex flex-col space-y-2">
                 <Link to="/login">
-                  <button className="btn-primary w-32">Login</button>
+                  <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md">
+                    Login
+                  </button>
                 </Link>
                 <Link to="/signup">
-                  <button className="btn-secondary w-32">Sign Up</button>
+                  <button className="bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
+                    Sign Up
+                  </button>
                 </Link>
               </div>
-              </>
             )}
           </div>
         </div>
