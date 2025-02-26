@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { jwtDecode } from "jwt-decode";
-
+import { useSelector } from "react-redux";
 
 
 const VendorStoreForm = () => {
@@ -24,7 +24,8 @@ const VendorStoreForm = () => {
     certificate: null,
   });
 
-  const authToken = localStorage.getItem("access_token");
+  const authToken = useSelector((state) => state.auth.access_token);
+
 
  // const categories = ["Electronics", "Fashion", "Groceries", "Health", "Home & Living"];
 

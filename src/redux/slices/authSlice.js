@@ -2,7 +2,6 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   access_token: null,
-  refresh_token: null,
   user_role: null,
 };
 
@@ -12,13 +11,13 @@ const authSlice = createSlice({
   reducers: {
     login: (state, action) => {
       state.access_token = action.payload.access;
-      state.refresh_token = action.payload.refresh;
       state.user_role = action.payload.role;
+      sessionStorage.setItem("refresh_token", action.payload.refresh); // Store refresh token in sessionStorage
     },
     logout: (state) => {
       state.access_token = null;
-      state.refresh_token = null;
       state.user_role = null;
+      sessionStorage.removeItem("refresh_token"); // Remove refresh token on logout
     },
   },
 });

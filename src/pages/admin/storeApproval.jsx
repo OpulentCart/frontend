@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const ApproveStore = () => {
+
+  const authToken = useSelector((state) => state.auth.access_token);
+
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
@@ -14,13 +18,25 @@ const ApproveStore = () => {
 
   useEffect(() => {
     fetchStores();
-  }, []);
+  }, [authToken]);
 
   const fetchStores = async () => {
+    
+    if (!authToken) {
+      setError("Unauthorized: Please log in.");
+      setLoading(false);
+      return;
+    }
+
     try {
       setError("");
       setLoading(true);
-      const res = await axios.get("http://localhost:5002/vendors/");
+      
+    const res = await axios.get("http://localhost:5002/vendors/", {
+      headers: {
+        Authorization: `Bearer ${authToken}`, // Pass token in headers
+      },
+    });
       setStores(res.data.vendors);
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -30,22 +46,23 @@ const ApproveStore = () => {
     }
   };
 
-  const updateStoreStatus = async (vendorId, status) => {
+  const updateStoreStatus = async (vendorId, newStatus) => {
+    console.log(`Sending request to update vendor ${vendorId} to status ${newStatus}`);
+  
     try {
-      setUpdatingId(vendorId);
-      await axios.put(`http://localhost:5002/vendors/${vendorId}`, { status });
-      setStores((prevStores) =>
-        prevStores.map((store) =>
-          store.vendor_id === vendorId ? { ...store, status } : store
-        )
+      const response = await axios.put(
+        `http://localhost:5002/vendors/${vendorId}`, // Check if vendorId is correctly added
+        { status: newStatus }, // Sending status in request body
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
+  
+      console.log("Response:", response.data);
     } catch (error) {
-      console.error(`Error updating store status to ${status}:`, error);
-      setError(`Failed to update store status. Please try again.`);
-    } finally {
-      setUpdatingId(null);
+      console.error("Error updating store status:", error);
     }
   };
+  
+  
 
   const filteredStores = stores.filter((store) => store.status === selectedTab);
 
