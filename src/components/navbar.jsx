@@ -102,12 +102,12 @@ function Navbar() {
             ) : (
               <>
                 <Link to="/login">
-                  <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md">
+                  <button className="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md">
                     Login
                   </button>
                 </Link>
                 <Link to="/signup">
-                  <button className="bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
+                  <button className="bg-gray-700 text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
                     Sign Up
                   </button>
                 </Link>
@@ -143,19 +143,19 @@ function Navbar() {
             {authToken ? (
               <button
                 onClick={handleLogout}
-                className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md"
+                className="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md"
               >
                 Logout
               </button>
             ) : (
               <div className="flex flex-col space-y-2">
                 <Link to="/login">
-                  <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md">
+                  <button className="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200 shadow-md">
                     Login
                   </button>
                 </Link>
                 <Link to="/signup">
-                  <button className="bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
+                  <button className="bg-gray-700 text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
                     Sign Up
                   </button>
                 </Link>
