@@ -13,6 +13,7 @@ import AdminLayout from '../layouts/AdminLayout';
 import Shop from '../pages/shop';
 import AdminUsers from '../pages/admin/AdminUsers';
 import Profile from '../pages/user-profile/profile';
+import ProductDetails from '../pages/productDetails';
 
 
 function AppRoutes() {
@@ -28,6 +29,7 @@ function AppRoutes() {
       <Route path="/contact" element={< ContactUs/>} />
       <Route path="/shop" element={< Shop/>} />
       <Route path="/profile" element={< Profile/>} />
+      <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="stores" element={<StoreApproval />} />
