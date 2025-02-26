@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const ProductForm = () => {
   const [step, setStep] = useState(1);
   const steps = ["Product Details", "Upload Images"];
+
+  const authToken = useSelector((state) => state.auth.access_token);
 
   const [formData, setFormData] = useState({
     vendor_id: "",
@@ -27,7 +30,7 @@ const ProductForm = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get("http://localhost:5005/categories");
+        const response = await axios.get("http://localhost:5004/categories");
         if (response.data.success) {
           setCategories(response.data.categories); // Store categories from API
         }
@@ -43,7 +46,11 @@ const ProductForm = () => {
   useEffect(() => {
     const fetchSubCategories = async () => {
       try {
-        const response = await axios.get("http://localhost:5005/subcategories");
+        const response = await axios.get("http://localhost:5004/subcategories",{
+          headers:{
+            Authorization: `Bearer ${authToken}`
+          }
+        });
         if (response.data.success) {
           setSubCategories(response.data.subCategories); // Store all sub-categories
         }
