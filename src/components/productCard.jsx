@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { FaHeart, FaShoppingCart, FaInfoCircle, FaStar } from "react-icons/fa";
+import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
 import { motion } from "framer-motion"; // Import Framer Motion
+import { useNavigate } from "react-router-dom"; // For navigation
 
 const ProductCard = ({ product, onLike, onAddToCart }) => {
   const [liked, setLiked] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const navigate = useNavigate(); // Initialize navigation
 
   const handleLike = () => {
     setLiked(!liked);
@@ -14,6 +16,10 @@ const ProductCard = ({ product, onLike, onAddToCart }) => {
   const handleAddToCart = () => {
     setCartCount(cartCount + 1);
     onAddToCart(product.id);
+  };
+
+  const handleNavigate = () => {
+    navigate(`/product/${product.id}`); // Navigate to product details page
   };
 
   return (
@@ -40,8 +46,13 @@ const ProductCard = ({ product, onLike, onAddToCart }) => {
           </motion.button>
         </div>
 
-        {/* ✅ Product Name - Limited to 1 Line */}
-        <h3 className="text-lg font-semibold mt-3 text-gray-900 truncate">{product.name}</h3>
+        {/* ✅ Clickable Product Title */}
+        <h3
+          className="text-lg font-semibold mt-3 text-gray-900 truncate cursor-pointer hover:text-blue-500 transition duration-300"
+          onClick={handleNavigate}
+        >
+          {product.name}
+        </h3>
 
         {/* ✅ Brand Name */}
         <p className="text-gray-500 text-sm">Brand: <span className="font-medium">{product.brand}</span></p>
@@ -56,27 +67,16 @@ const ProductCard = ({ product, onLike, onAddToCart }) => {
         </div>
       </div>
 
-      {/* ✅ Buttons are always at the bottom */}
-      <div className="mt-4 flex justify-between gap-3">
-        {/* Add to Cart Button */}
+      {/* ✅ "Add to Cart" Button at Bottom */}
+      <div className="mt-4">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.9 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-600 hover:shadow-lg transition-all duration-300"
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:from-yellow-500 hover:to-yellow-600 hover:shadow-lg transition-all duration-300"
           onClick={handleAddToCart}
         >
           <FaShoppingCart size={18} /> Add to Cart
-        </motion.button>
-
-        {/* Details Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 200 }}
-          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 hover:shadow-lg transition-all duration-300"
-        >
-          <FaInfoCircle size={18} /> Details
         </motion.button>
       </div>
     </div>

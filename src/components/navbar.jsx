@@ -8,32 +8,24 @@ import { Bell } from "lucide-react";
 function Navbar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const authToken = useSelector((state) => state.auth.access_token);
-  const notifications = useSelector((state) => state.notifications?.count || 0);
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Extract user_role from authToken
-  let user_role = null;
-  if (authToken) {
-    try {
-      const decodedToken = JSON.parse(atob(authToken.split(".")[1])); // Decoding JWT
-      user_role = decodedToken.user_role; // Assuming user_role is stored in JWT payload
-    } catch (error) {
-      console.error("Error decoding auth token:", error);
-    }
-  }
+  // Get authToken and user_role directly from Redux state
+  const authToken = useSelector((state) => state.auth.access_token);
+  const user_role = useSelector((state) => state.auth.user_role);  // Assuming user_role is in the auth state
+  const notifications = useSelector((state) => state.notifications?.count || 0);
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
     sessionStorage.removeItem("refresh_token"); // Ensure refresh token is cleared
-    navigate("/");
+    navigate("/");  // Redirect to home page after logout
   };
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0a192f] shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-
           {/* Brand Name */}
           <div className="text-white text-2xl font-bold">
             <Link to="/">Opulent</Link>
@@ -43,14 +35,19 @@ function Navbar() {
           <div className="hidden md:flex space-x-6">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/shop" className="nav-link">Shop</Link>
+
+            {/* Vendor specific links */}
             {authToken && user_role === "vendor" && (
               <>
                 <Link to="/store-form" className="nav-link">Add Store</Link>
                 <Link to="/product-form" className="nav-link">Add Product</Link>
               </>
             )}
+
             <Link to="/about" className="nav-link">About Us</Link>
             <Link to="/contact" className="nav-link">Contact</Link>
+
+            {/* Admin Panel link */}
             {authToken && user_role === "admin" && (
               <Link to="/admin" className="nav-link">Admin Panel</Link>
             )}
@@ -128,18 +125,24 @@ function Navbar() {
           <div className="flex flex-col items-center space-y-4">
             <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>Home</Link>
             <Link to="/shop" className="nav-link" onClick={() => setMenuOpen(false)}>Shop</Link>
+
+            {/* Vendor specific links */}
             {authToken && user_role === "vendor" && (
               <>
                 <Link to="/store-form" className="nav-link" onClick={() => setMenuOpen(false)}>Add Store</Link>
                 <Link to="/product-form" className="nav-link" onClick={() => setMenuOpen(false)}>Add Product</Link>
               </>
             )}
+
             <Link to="/about" className="nav-link" onClick={() => setMenuOpen(false)}>About Us</Link>
             <Link to="/contact" className="nav-link" onClick={() => setMenuOpen(false)}>Contact</Link>
+
+            {/* Admin Panel link */}
             {authToken && user_role === "admin" && (
               <Link to="/admin" className="nav-link" onClick={() => setMenuOpen(false)}>Admin Panel</Link>
             )}
 
+            {/* Auth buttons */}
             {authToken ? (
               <button
                 onClick={handleLogout}
