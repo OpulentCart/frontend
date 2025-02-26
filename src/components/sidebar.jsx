@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { LayoutDashboard, Store, Package, Users } from "lucide-react";
 
 const Sidebar = () => {
   return (
@@ -11,9 +12,12 @@ const Sidebar = () => {
             to="/admin"
             end
             className={({ isActive }) =>
-              `block p-2 rounded ${isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"}`
+              `flex items-center gap-2 block p-2 rounded ${
+                isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"
+              }`
             }
           >
+            <LayoutDashboard size={20} />
             Dashboard
           </NavLink>
         </li>
@@ -21,9 +25,12 @@ const Sidebar = () => {
           <NavLink
             to="/admin/stores"
             className={({ isActive }) =>
-              `block p-2 rounded ${isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"}`
+              `flex items-center gap-2 block p-2 rounded ${
+                isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"
+              }`
             }
           >
+            <Store size={20} />
             Manage Stores
           </NavLink>
         </li>
@@ -31,9 +38,12 @@ const Sidebar = () => {
           <NavLink
             to="/admin/products"
             className={({ isActive }) =>
-              `block p-2 rounded ${isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"}`
+              `flex items-center gap-2 block p-2 rounded ${
+                isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"
+              }`
             }
           >
+            <Package size={20} />
             Manage Products
           </NavLink>
         </li>
@@ -41,9 +51,12 @@ const Sidebar = () => {
           <NavLink
             to="/admin/users"
             className={({ isActive }) =>
-              `block p-2 rounded ${isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"}`
+              `flex items-center gap-2 block p-2 rounded ${
+                isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"
+              }`
             }
           >
+            <Users size={20} />
             Total Users
           </NavLink>
         </li>
