@@ -107,7 +107,7 @@ function Navbar() {
                   </button>
                 </Link>
                 <Link to="/signup">
-                  <button className="bg-gray-700 text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 shadow-md">
+                  <button className="bg-gray-400 text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-500 transition duration-200 shadow-md">
                     Sign Up
                   </button>
                 </Link>
