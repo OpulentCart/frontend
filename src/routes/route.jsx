@@ -15,6 +15,7 @@ import AdminUsers from '../pages/admin/AdminUsers';
 import Profile from '../pages/user-profile/profile';
 import ProductDetails from '../pages/productDetails';
 import EditProfile from '../pages/user-profile/editProfile';
+// import Notifications from '../pages/notifications';
 
 
 function AppRoutes() {
@@ -29,6 +30,7 @@ function AppRoutes() {
       <Route path="/product-form" element={< CreateProductForm/>} />
       <Route path="/contact" element={< ContactUs/>} />
       <Route path="/shop" element={< Shop/>} />
+      {/* <Route path="/notifications" element={< Notifications/>} /> */}
       <Route path="/profile" element={< Profile/>} />
       <Route path="/edit-profile" element={<EditProfile />} />
       <Route path="/product/:id" element={<ProductDetails />} />
