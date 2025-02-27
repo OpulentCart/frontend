@@ -3,6 +3,7 @@ import ShopSidebar from "../components/shopSidebar";
 import ProductCard from "../components/productCard";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
 
 const Shop = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -52,11 +53,20 @@ const Shop = () => {
     }
   };
 
-  if (loading) return <p className="text-center py-10">Loading...</p>;
-  if (error) return <p className="text-center text-red-600 py-10">Error: {error}</p>;
-
   return (
     <div className="relative mt-20 mb-20">
+      {/* Loader with Transparent Background */}
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50">
+          <motion.div
+            className="w-14 h-14 border-4 border-t-yellow-400 border-gray-300 rounded-full animate-spin"
+            initial={{ rotate: 0 }}
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          />
+        </div>
+      )}
+
       {/* Open Sidebar Button */}
       <button
         className="p-2 fixed top-4 left-4 bg-gray-800 text-white rounded-md z-50"
@@ -71,7 +81,6 @@ const Shop = () => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } z-50`}
       >
-        {/* Pass closeSidebar function */}
         <ShopSidebar
           categories={categories.map((cat) => ({
             id: cat.category_id,
@@ -82,7 +91,7 @@ const Shop = () => {
         />
       </div>
 
-      {/* Background Overlay (Click to Close Sidebar) */}
+      {/* Background Overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-40"
@@ -99,9 +108,9 @@ const Shop = () => {
               product={{
                 id: product.product_id,
                 name: product.name,
-                brand: product.brand, // ✅ Add brand
+                brand: product.brand,
                 price: product.price,
-                ratings: product.ratings, // ✅ Add ratings
+                ratings: product.ratings,
                 main_image: product.main_image || "/default.jpg",
               }}
               onLike={(id, liked) => console.log("Like toggled", id, liked)}
