@@ -48,7 +48,7 @@ const ProductCard = ({ product, onLike, onAddToCart }) => {
 
         {/* ✅ Clickable Product Title */}
         <h3
-          className="text-lg font-semibold mt-3 text-gray-900 truncate cursor-pointer hover:text-blue-500 transition duration-300"
+          className="text-lg font-semibold mt-3 text-gray-900 truncate cursor-pointer hover:text-yellow-500 transition duration-300"
           onClick={handleNavigate}
         >
           {product.name}
