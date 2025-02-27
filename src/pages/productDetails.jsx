@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { FaHeart, FaShoppingCart, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
+import Loader from "../../src/components/loader"; // Import the Loader component
 
 const ProductDetails = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -12,6 +13,9 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [liked, setLiked] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // State for clicked image
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 }); // Position for zoom lens
+  const [isHovered, setIsHovered] = useState(false); // Track hover state
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -20,6 +24,7 @@ const ProductDetails = () => {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setProduct(response.data.product);
+        setSelectedImage(response.data.product.main_image); // Default to main image
       } catch (err) {
         setError("Failed to fetch product details.");
       } finally {
@@ -34,7 +39,30 @@ const ProductDetails = () => {
     setLiked(!liked);
   };
 
-  if (loading) return <p className="text-center py-10">Loading...</p>;
+  const handleImageClick = (image) => {
+    setSelectedImage(image); // Set the clicked image
+  };
+
+  const handleMouseMove = (e) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - left; // Cursor X relative to image
+    const y = e.clientY - top; // Cursor Y relative to image
+    const xPercent = (x / width) * 100; // Percentage X position
+    const yPercent = (y / height) * 100; // Percentage Y position
+    setZoomPosition({ x: xPercent, y: yPercent });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setZoomPosition({ x: 0, y: 0 }); // Reset zoom position on leave
+  };
+
+  // Show only the loader until loading completes
+  if (loading) return <Loader />;
   if (error) return <p className="text-center text-red-600 py-10">{error}</p>;
 
   // Ensure product.ratings is a valid number and >= 0
@@ -47,28 +75,67 @@ const ProductDetails = () => {
   const hasHalfStar = validRating % 1 >= 0.5;
 
   return (
-    <div className="container mx-auto px-4 py-10 mt-20 mb-20">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Product Images */}
-        <div>
-          <img
-            src={product.main_image}
-            alt={product.name}
-            className="w-full h-96 object-contain rounded-lg shadow-md"
-          />
-          <div className="flex gap-2 mt-4">
+    <div className="container mx-auto px-4 py-10 mt-20 mb-20 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Product Images (Left Column) */}
+        <div className="flex flex-col gap-4 relative">
+          {/* Fixed-Size Selected Image */}
+          <div
+            className="w-full h-96 rounded-lg shadow-md overflow-hidden cursor-zoom-in relative bg-transparent"
+            onMouseMove={handleMouseMove}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <img
+              src={selectedImage}
+              alt={product.name}
+              className="w-full h-full object-contain bg-transparent"
+            />
+          </div>
+
+          {/* Thumbnail Images */}
+          <div className="flex gap-2">
+            <img
+              src={product.main_image}
+              alt={product.name}
+              className="w-20 h-20 object-cover rounded-md cursor-pointer shadow-md hover:scale-110 transition-transform bg-transparent"
+              onClick={() => handleImageClick(product.main_image)}
+            />
             {product.cover_images.map((img, index) => (
               <img
                 key={index}
                 src={img}
                 alt={`Cover ${index}`}
-                className="w-20 h-20 object-cover rounded-md cursor-pointer shadow-md hover:scale-110 transition-transform"
+                className="w-20 h-20 object-cover rounded-md cursor-pointer shadow-md hover:scale-110 transition-transform bg-transparent"
+                onClick={() => handleImageClick(img)}
               />
             ))}
           </div>
+
+          {/* Zoom Box (Appears on Hover, Positioned Beside) */}
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute left-full top-0 w-[500px] h-[500px] rounded-lg shadow-md overflow-hidden z-10 ml-6 bg-transparent"
+              style={{
+                backgroundImage: `url(${selectedImage})`,
+                backgroundSize: "300%", // 3x magnification for more detail
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+              }}
+            >
+              <img
+                src={selectedImage}
+                alt="Zoomed View"
+                className="w-full h-full object-contain opacity-0 bg-transparent" // Invisible image for sizing
+              />
+            </motion.div>
+          )}
         </div>
 
-        {/* Product Details */}
+        {/* Product Details (Right Column) */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
           <p className="text-gray-600 text-md font-medium mt-2">
@@ -81,7 +148,7 @@ const ProductDetails = () => {
             {[...Array(fullStars)].map((_, i) => (
               <FaStar key={i} className="text-yellow-500" />
             ))}
-            {hasHalfStar && <FaStarHalfAlt className="text-yellow-500" />} {/* Display half star */}
+            {hasHalfStar && <FaStarHalfAlt className="text-yellow-500" />}
             <span className="text-gray-700 ml-2">{validRating} / 5</span>
           </div>
 
@@ -126,4 +193,3 @@ const ProductDetails = () => {
 };
 
 export default ProductDetails;
-  

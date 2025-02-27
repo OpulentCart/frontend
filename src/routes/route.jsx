@@ -15,6 +15,8 @@ import AdminUsers from '../pages/admin/AdminUsers';
 import Profile from '../pages/user-profile/profile';
 import ProductDetails from '../pages/productDetails';
 import EditProfile from '../pages/user-profile/editProfile';
+import VendorDashboard from '../pages/vendor/vendorDashboard';
+import VendorProducts from '../pages/vendor/vendorProducts';
 // import Notifications from '../pages/notifications';
 
 
@@ -40,7 +42,8 @@ function AppRoutes() {
           <Route path="products" element={<ProductApproval />} />
           <Route path="users" element={<AdminUsers />} />
       </Route> 
-
+      <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+      <Route path="/vendor/products" element={<VendorProducts />} />
     </Routes>
   );
 }
