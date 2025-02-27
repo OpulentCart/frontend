@@ -19,8 +19,10 @@ const ProductForm = () => {
     sub_image: [],      
     likes: 0,          
     stock: "",        
-    price: "",        
+    price: "",  
+    ratings: "",  // Added this field
   });
+  
 
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
@@ -77,20 +79,29 @@ const ProductForm = () => {
   
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value, type, files } = e.target;
   
-    if (files) {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: name === "cover_image" ? files[0] : [...files], 
-      }));
+    if (type === "file") {
+      if (name === "cover_image") {
+        setFormData((prev) => ({
+          ...prev,
+          cover_image: files[0], // Store single file
+        }));
+      } else if (name === "sub_image") {
+        setFormData((prev) => ({
+          ...prev,
+          sub_image: Array.from(files), // Store multiple files as an array
+        }));
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]: name === "category_id" ? parseInt(value) : value, // Convert category_id to number
+        [name]: value, // Update text, number, and select inputs
       }));
     }
   };
+  
+  
   
   
 
@@ -126,26 +137,50 @@ const ProductForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    try {
-      const formDataToSend = new FormData();
-
-      for (const key in formData) {
-        if (key !== "sub_image") {
-          formDataToSend.append(key, formData[key]);
-        }
+  
+    const formDataToSend = new FormData();
+  
+    for (const key in formData) {
+      let value = formData[key];
+  
+      // Convert empty strings to null or skip appending them
+      if (["vendor_id", "category_id", "sub_category_id", "likes", "stock", "price", "ratings"].includes(key) && !value) {
+        continue; // Skip empty fields instead of appending null
       }
-
-      if (formData.sub_image.length > 0) {
-        Array.from(formData.sub_image).forEach((image, index) => {
-          formDataToSend.append(`sub_image[${index}]`, image);
-        });
+  
+      // Append only if value exists
+      if (value !== null && value !== undefined) {
+        formDataToSend.append(key, value);
       }
-
-      const response = await axios.post("http://localhost:5005/products/create", formDataToSend, {
-        headers: { "Content-Type": "multipart/form-data" },
+    }
+  
+    // Ensure a cover image is provided
+    if (formData.cover_image) {
+      formDataToSend.append("cover_image", formData.cover_image);
+    } else {
+      alert("Please upload a main image.");
+      return;
+    }
+  
+    // Ensure sub images are provided
+    if (formData.sub_image.length > 0) {
+      formData.sub_image.forEach((image, index) => {
+        formDataToSend.append(`sub_image`, image); // Fix: Remove array syntax in key
       });
-
+    } else {
+      alert("Please upload at least one cover image.");
+      return;
+    }
+  
+    try {
+      const response = await axios.post(
+        "http://localhost:5004/products/create",
+        formDataToSend,
+        {
+          headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${authToken}` },
+        }
+      );
+  
       if (response.data.success) {
         alert("Product added successfully!");
         setFormData({
@@ -160,14 +195,16 @@ const ProductForm = () => {
           likes: 0,
           stock: "",
           price: "",
+          ratings: "",
         });
-        setStep(1);
       }
     } catch (error) {
       console.error("Error submitting product:", error);
       alert("Failed to add product. Please try again.");
     }
   };
+  
+
 
   return (
     <div className="mt-10 min-h-screen p-6 bg-gray-100 flex items-center justify-center">
@@ -243,21 +280,55 @@ const ProductForm = () => {
                 <label htmlFor="description">Description</label>
                 <textarea id="description" name="description" value={formData.description} onChange={handleChange} className="h-20 border mt-1 rounded px-4 w-full bg-gray-50" />
               </div>
+
+              <div>
+              <label htmlFor="ratings">Ratings</label>
+              <input 
+                type="number" 
+                id="ratings" 
+                name="ratings" 
+                value={formData.ratings} 
+                onChange={handleChange} 
+                className="h-10 border mt-1 rounded px-4 w-full bg-gray-50" 
+                min="0" 
+                max="5" 
+                step="0.1"
+              />
+            </div>
+
             </div>
           )}
 
           {step === 2 && (
             <div className="grid gap-4 text-sm grid-cols-1 md:grid-cols-2">
-              <div>
-                <label htmlFor="cover_image">Upload Cover Image</label>
-                <input type="file" id="cover_image" name="cover_image" accept="image/*" onChange={handleChange} className="h-10 border mt-1 rounded px-4 w-full bg-gray-50" />
-              </div>
-
-              <div>
-                <label htmlFor="sub_image">Upload Sub Images</label>
-                <input type="file" id="sub_image" name="sub_image" accept="image/*" multiple onChange={handleChange} className="h-10 border mt-1 rounded px-4 w-full bg-gray-50" />
-              </div>
+            {/* Cover Image Input */}
+            <div>
+              <label htmlFor="cover_image">Upload Cover Image</label>
+              <input
+                type="file"
+                id="cover_image"
+                name="cover_image"
+                accept="image/*"
+                onChange={handleChange}
+                className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+              />
             </div>
+          
+            {/* Sub Images Input */}
+            <div>
+              <label htmlFor="sub_image">Upload Sub Images</label>
+              <input
+                type="file"
+                id="sub_image"
+                name="sub_image"
+                accept="image/*"
+                multiple
+                onChange={handleChange}
+                className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+              />
+            </div>
+          </div>
+          
           )}
 
           <div className="flex justify-between mt-6">
