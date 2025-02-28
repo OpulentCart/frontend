@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
-import { FiHeart, FiShoppingCart, FiUser, FiMenu, FiX } from "react-icons/fi";
+import { FiHeart, FiUser, FiMenu, FiX } from "react-icons/fi";
 import { Bell } from "lucide-react";
 
 function Navbar() {
@@ -12,8 +12,9 @@ function Navbar() {
 
   const authToken = useSelector((state) => state.auth.access_token);
   const user_role = useSelector((state) => state.auth.user_role);
-  const notifications = useSelector((state) => state.notifications?.count || 0);
+  const notifications = useSelector((state) => state.notifications?.list || []);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -90,25 +91,40 @@ function Navbar() {
           {/* Right Side Icons & Auth Controls */}
           <div className="hidden md:flex items-center space-x-5">
             {authToken && user_role !== "admin" && (
-              <>
-                <Link to="/wishlist" className="icon-link">
-                  <FiHeart size={24} />
-                </Link>
-                <Link to="/cart" className="icon-link relative">
-                  <FiShoppingCart size={24} />
-                </Link>
-              </>
+              <Link to="/wishlist" className="icon-link">
+                <FiHeart size={24} />
+              </Link>
             )}
 
+            {/* Notification Dropdown */}
             {authToken && (
-              <Link to="/notifications" className="icon-link relative">
-                <Bell size={24} />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    {notifications}
-                  </span>
+              <div className="relative">
+                <button className="icon-link relative" onClick={() => setNotifOpen(!notifOpen)}>
+                  <Bell size={24} />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown Content */}
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg overflow-hidden">
+                    {notifications.length > 0 ? (
+                      <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                        {notifications.map((notif, index) => (
+                          <li key={index} className="px-4 py-2 text-sm hover:bg-gray-100">
+                            {notif.message}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-4 text-gray-500 text-center">No Notifications</div>
+                    )}
+                  </div>
                 )}
-              </Link>
+              </div>
             )}
 
             {authToken ? (

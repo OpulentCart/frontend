@@ -2,35 +2,35 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 
 const ShopSidebar = ({ categories, onFilterChange, closeSidebar }) => {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
   const [expandedCategory, setExpandedCategory] = useState(null);
 
-  const handleCategoryChange = (category) => {
-    if (selectedCategory === category) {
-      setSelectedCategory(null);
-      setSelectedSubcategory(null);
+  const handleCategoryChange = (categoryId) => {
+    if (selectedCategoryId === categoryId) {
+      setSelectedCategoryId(null);
+      setSelectedSubcategoryId(null);
+      setExpandedCategory(null);
       console.log("Deselecting category, showing all products");
-      onFilterChange([], []);
+      onFilterChange({ categoryId: null, subcategoryId: null });
     } else {
-      setSelectedCategory(category);
-      setSelectedSubcategory(null);
-      console.log("Selected category:", category);
-      onFilterChange([category], []);
+      setSelectedCategoryId(categoryId);
+      setSelectedSubcategoryId(null);
+      setExpandedCategory(categoryId);
+      console.log("Selected category ID:", categoryId);
+      onFilterChange({ categoryId, subcategoryId: null });
     }
   };
 
-  const handleSubcategoryChange = (subcategory) => {
-    if (selectedSubcategory === subcategory) {
-      setSelectedSubcategory(null);
-      setSelectedCategory(null);
-      console.log("Deselecting subcategory, showing all products");
-      onFilterChange([], []);
+  const handleSubcategoryChange = (subcategoryId) => {
+    if (selectedSubcategoryId === subcategoryId) {
+      setSelectedSubcategoryId(null);
+      console.log("Deselecting subcategory, showing category products");
+      onFilterChange({ categoryId: selectedCategoryId, subcategoryId: null });
     } else {
-      setSelectedSubcategory(subcategory);
-      setSelectedCategory(null);
-      console.log("Selected subcategory:", subcategory);
-      onFilterChange([], [subcategory]);
+      setSelectedSubcategoryId(subcategoryId);
+      console.log("Selected subcategory ID:", subcategoryId);
+      onFilterChange({ categoryId: selectedCategoryId, subcategoryId });
     }
   };
 
@@ -57,8 +57,8 @@ const ShopSidebar = ({ categories, onFilterChange, closeSidebar }) => {
                 <input
                   type="checkbox"
                   className="mr-3 w-4 h-4 cursor-pointer accent-yellow-400 transition-transform duration-200 group-hover:scale-110"
-                  onChange={() => handleCategoryChange(category.name)}
-                  checked={selectedCategory === category.name}
+                  onChange={() => handleCategoryChange(category.id)}
+                  checked={selectedCategoryId === category.id}
                 />
                 <h3
                   className="flex-1 cursor-pointer text-base font-semibold text-gray-100 group-hover:text-yellow-300 transition-colors duration-200"
@@ -88,8 +88,8 @@ const ShopSidebar = ({ categories, onFilterChange, closeSidebar }) => {
                         <input
                           type="checkbox"
                           className="mr-2 w-4 h-4 cursor-pointer accent-yellow-400 transition-transform duration-200 group-hover:scale-110"
-                          onChange={() => handleSubcategoryChange(sub.name)}
-                          checked={selectedSubcategory === sub.name}
+                          onChange={() => handleSubcategoryChange(sub.subcategory_id)}
+                          checked={selectedSubcategoryId === sub.subcategory_id}
                         />
                         <span className="text-sm text-gray-200 group-hover:text-yellow-200 transition-colors duration-200">
                           {sub.name}

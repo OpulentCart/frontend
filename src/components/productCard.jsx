@@ -15,6 +15,35 @@ const ProductCard = ({ product, onLike }) => {
   const authToken = useSelector((state) => state.auth.access_token);
 
   useEffect(() => {
+    const initializeCartForUser = async () => {
+      if (!authToken) return;
+  
+      let cartId = sessionStorage.getItem("cart_id");
+  
+      if (!cartId || cartId === "undefined") {
+        try {
+          const userId = getUserIdFromToken(authToken);
+          if (!userId) return;
+  
+          const createResponse = await axios.post(
+            "http://localhost:5007/carts",
+            { user_id: userId },
+            { headers: { Authorization: `Bearer ${authToken}` } }
+          );
+  
+          cartId = createResponse.data?.cart?.cart_id;
+          if (cartId) sessionStorage.setItem("cart_id", cartId);
+        } catch (error) {
+          console.error("Error creating cart for new user:", error.response?.data || error.message);
+        }
+      }
+    };
+  
+    initializeCartForUser();
+  }, [authToken]); // Runs when authToken changes
+  
+
+  useEffect(() => {
     const fetchCartItems = async () => {
       const cartId = sessionStorage.getItem("cart_id");
       if (!cartId) return;
