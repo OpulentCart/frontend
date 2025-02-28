@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
-import { motion } from "framer-motion"; 
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { jwtDecode } from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
 
 const API_URL = "http://localhost:5007/cart-items";
 
 const ProductCard = ({ product, onLike }) => {
   const [liked, setLiked] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);  
+  const [isInCart, setIsInCart] = useState(false);
   const navigate = useNavigate();
-
   const authToken = useSelector((state) => state.auth.access_token);
 
   useEffect(() => {
@@ -29,7 +28,7 @@ const ProductCard = ({ product, onLike }) => {
           (item) => item.product_id === product.id
         );
 
-        setIsInCart(!!existingItem); // Update state
+        setIsInCart(!!existingItem);
       } catch (error) {
         console.error("Error fetching cart items:", error);
       }
@@ -96,7 +95,7 @@ const ProductCard = ({ product, onLike }) => {
         { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
       );
 
-      setIsInCart(true); 
+      setIsInCart(true);
     } catch (error) {
       console.error("Error adding product to cart:", error);
     }
@@ -117,6 +116,7 @@ const ProductCard = ({ product, onLike }) => {
           className="w-full h-52 object-contain rounded-lg"
         />
 
+        {/* Like Button */}
         <motion.button
           whileTap={{ scale: 0.8 }}
           whileHover={{ scale: 1.2 }}

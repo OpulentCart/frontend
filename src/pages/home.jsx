@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import CountdownTimer from "../components/countDown.jsx";
+import AdvertisementCarousel from "../components/advertisementCarousel"; 
 
 const categories = [
   {
@@ -58,72 +59,13 @@ function HomePage() {
     },
   ];
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <div
-      className="relative w-full min-h-[70vh] md:h-[600px] flex items-center px-10 bg-cover bg-center text-white"
-      style={{ backgroundImage: "url('pixelcut-export.png')" }}
-    >
-      {/* Animated Content */}
-      <motion.div
-        className="max-w-xl"
-        initial={{ opacity: 0, y: 50 }}  // Start hidden and slightly below
-        animate={{ opacity: 1, y: 0 }}  // Fade in and move up
-        transition={{ duration: 0.8, ease: "easeOut" }} // Smooth animation
-      >
-        <motion.h1
-          className="text-6xl font-bold"
-          initial={{ opacity: 0, x: -50 }} // Slide from left
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1 }}
-        >
-          Best Collections of <span className="text-yellow-400">Brands</span>
-        </motion.h1>
-
-        <motion.p
-          className="mt-2 text-lg text-gray-300"
-          initial={{ opacity: 0, x: 50 }} // Slide from right
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.3 }} // Delayed animation
-        >
-          Find the best products at unbeatable prices!
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }} // Start small
-          animate={{ opacity: 1, scale: 1 }} // Grow effect
-          transition={{ duration: 0.8, delay: 0.5 }}
-        >
-          <Link
-            to={'/shop'}
-            className="mt-5 inline-block px-6 py-3 bg-yellow-500 text-black font-semibold rounded-md hover:bg-yellow-600 transition"
-          >
-            Shop Now
-          </Link>
-
-          <div className="mt-6 grid grid-cols-2 gap-4 text-gray-300 hidden sm:grid lg:place-self-start">
-          <div className="flex items-center space-x-2">
-            <span className="text-yellow-400 text-xl">✔</span>
-            <p>Free Shipping on Orders Over $50</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-yellow-400 text-xl">✔</span>
-            <p>Exclusive Discounts for Members</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-yellow-400 text-xl">✔</span>
-            <p>24/7 Customer Support</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-yellow-400 text-xl">✔</span>
-            <p>100% Secure Payments</p>
-          </div>
-        </div>
-
-        </motion.div>
-      </motion.div>
-    </div>
-
+    <div className="min-h-screen bg-white">  
+      {/* <div className="relative w-full min-h-[70vh] md:h-[600px]">
+        <AdvertisementCarousel />
+      </div> */}
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <AdvertisementCarousel />
+      </div>
     
       {/* Categories Section */}
       <div className="py-10 px-6">
@@ -213,8 +155,6 @@ function HomePage() {
           </div>
         </div>
     </div>
-
-    
   );
 }
 
