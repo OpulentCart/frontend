@@ -4,8 +4,8 @@ import ProductCard from "../components/productCard";
 import CartSidebar from "../components/cartSidebar";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import Loader from "../../src/components/loader"; 
-import { ShoppingCart } from "lucide-react"; 
+import Loader from "../../src/components/loader";
+import { ShoppingCart } from "lucide-react";
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -39,6 +39,7 @@ const Shop = () => {
   const [cartItems, setCartItems] = useState([]);
   const cartId = sessionStorage.getItem("cart_id");
 
+  // Fetch initial data (categories, subcategories, products)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -54,9 +55,16 @@ const Shop = () => {
           }),
         ]);
 
-        setCategories(categoriesRes.data.categories || []);
-        setSubcategories(subcategoriesRes.data.subCategories || []);
+        const categoriesData = categoriesRes.data.categories || [];
+        const subcategoriesData = subcategoriesRes.data.subCategories || [];
         const productsData = productsRes.data.products || [];
+
+        console.log("Categories:", categoriesData);
+        console.log("Subcategories:", subcategoriesData);
+        console.log("Sample product:", productsData[0]);
+
+        setCategories(categoriesData);
+        setSubcategories(subcategoriesData);
         setProducts(productsData);
         setFilteredProducts(productsData);
       } catch (err) {
@@ -70,19 +78,17 @@ const Shop = () => {
     fetchData();
   }, [authToken]);
 
+  // Fetch cart items
   useEffect(() => {
     const fetchCartItems = async () => {
       if (!cartId || !authToken) return;
 
       try {
-        // Fetch cart items
         const cartResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
-        const cartItemsData = cartResponse.data.cartItems;
-
-        // Fetch product details for each cart item
+        const cartItemsData = cartResponse.data.cartItems || [];
         const productRequests = cartItemsData.map((item) =>
           axios.get(`http://127.0.0.1:8001/related-products/${item.product_id}/`, {
             headers: { Authorization: `Bearer ${authToken}` },
@@ -101,25 +107,71 @@ const Shop = () => {
     fetchCartItems();
   }, [cartId, authToken]);
 
-  const filterProducts = (selectedCategories, selectedSubcategories) => {
-    const filtered = products.filter((p) => {
-      if (selectedCategories.length > 0) {
-        const selectedCategory = categories.find((cat) => cat.name === selectedCategories[0]);
-        const categoryId = selectedCategory ? selectedCategory.category_id : null;
-        return categoryId && p.category_id === categoryId;
-      }
+  // Filter products based on category and subcategory IDs
+  const filterProducts = ({ categoryId, subcategoryId }) => {
+    console.log("Filtering with:", { categoryId, subcategoryId });
 
-      if (selectedSubcategories.length > 0) {
-        const selectedSubcategory = subcategories.find((sub) => sub.name === selectedSubcategories[0]);
-        const subcategoryId = selectedSubcategory ? selectedSubcategory.sub_category_id : null;
-        return subcategoryId && p.sub_category_id === subcategoryId;
-      }
+    let filtered = [...products];
 
-      return true;
-    });
+    if (subcategoryId) {
+      filtered = filtered.filter((p) => p.sub_category_id === subcategoryId);
+    } else if (categoryId) {
+      const subIds = subcategories
+        .filter((sub) => sub.category_id === categoryId)
+        .map((sub) => sub.sub_category_id);
+      filtered = filtered.filter((p) => subIds.includes(p.sub_category_id));
+    }
 
+    console.log("Filtered products:", filtered);
     setFilteredProducts(filtered);
   };
+
+  // Add product to cart and open cart sidebar
+  const handleAddToCart = async (productId) => {
+    if (!authToken || !cartId) {
+      console.error("No auth token or cart ID available");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://localhost:5007/cart-items/add`,
+        { cart_id: cartId, product_id: productId, quantity: 1 },
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+
+      const updatedCartItems = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      const cartItemsData = updatedCartItems.data.cartItems || [];
+      const productRequests = cartItemsData.map((item) =>
+        axios.get(`http://127.0.0.1:8001/related-products/${item.product_id}/`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
+      );
+
+      const productResponses = await Promise.all(productRequests);
+      const products = productResponses.map((res) => res.data);
+
+      setCartItems(products);
+      setIsCartOpen(true); // Open cart sidebar after adding item
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
+  };
+
+  // Prepare sidebar categories structure
+  const sidebarCategories = categories.map((cat) => ({
+    id: cat.category_id,
+    name: cat.name,
+    subcategories: subcategories
+      .filter((sub) => sub.category_id === cat.category_id)
+      .map((sub) => ({
+        subcategory_id: sub.sub_category_id,
+        name: sub.name,
+      })),
+  }));
 
   if (loading) return <Loader />;
   if (error) return <p className="text-center text-gray-600 py-10">{error}</p>;
@@ -155,7 +207,7 @@ const Shop = () => {
           } z-50`}
         >
           <ShopSidebar
-            categories={categories}
+            categories={sidebarCategories}
             onFilterChange={filterProducts}
             closeSidebar={() => setIsSidebarOpen(false)}
           />
@@ -164,7 +216,12 @@ const Shop = () => {
 
       {/* Cart Sidebar */}
       <ErrorBoundary>
-        {isCartOpen && <CartSidebar cartItems={cartItems} closeSidebar={() => setIsCartOpen(false)} />}
+        {isCartOpen && (
+          <CartSidebar
+            cartItems={cartItems}
+            closeSidebar={() => setIsCartOpen(false)}
+          />
+        )}
       </ErrorBoundary>
 
       {/* Overlay for Sidebar and Cart */}
@@ -192,7 +249,7 @@ const Shop = () => {
                 ratings: product.ratings,
                 main_image: product.main_image || "/default.jpg",
               }}
-              onAddToCart={() => setIsCartOpen(true)}
+              onAddToCart={() => handleAddToCart(product.product_id)}
             />
           ))
         ) : (

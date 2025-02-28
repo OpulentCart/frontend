@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
-import { FiHeart, FiUser, FiMenu, FiX } from "react-icons/fi";
+import { FiHeart, FiUser, FiMenu, FiX, FiTrash2 } from "react-icons/fi";
 import { Bell } from "lucide-react";
+import axios from "axios";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -12,15 +13,67 @@ function Navbar() {
 
   const authToken = useSelector((state) => state.auth.access_token);
   const user_role = useSelector((state) => state.auth.user_role);
-  const notifications = useSelector((state) => state.notifications?.list || []);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    sessionStorage.removeItem("refresh_token");
-    navigate("/");
+  // Fetch notifications
+  useEffect(() => {
+    if (authToken) {
+      axios
+        .get("http://localhost:5008/notifications", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
+        .then((response) => {
+          setNotifications(response.data.notifications || []);
+        })
+        .catch((error) => {
+          console.error("Error fetching notifications:", error);
+        });
+    }
+  }, [authToken]);
+
+  // Mark notification as read
+  const markAsRead = async (notifId) => {
+    try {
+      const response = await axios.put(
+        "http://localhost:5008/notifications",
+        { notificationId: notifId },
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+
+      if (response.data.success) {
+        setNotifications((prevNotifications) =>
+          prevNotifications.map((notif) =>
+            notif.id === notifId ? { ...notif, read: true } : notif
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
+
+  // Delete notification
+  const deleteNotification = async (notifId) => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:5008/notifications/${notifId}`,
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+
+      if (response.data.success) {
+        setNotifications((prevNotifications) =>
+          prevNotifications.filter((notif) => notif.id !== notifId)
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  // Count unread notifications
+  const unreadCount = notifications.filter((notif) => !notif.read).length;
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0a192f] shadow-md">
@@ -33,58 +86,14 @@ function Navbar() {
             </button>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-6">
-            <button
-              onClick={() => navigate("/")}
-              className={`nav-link ${location.pathname === "/" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-            >
-              Home
-            </button>
-            <Link
-              to="/shop"
-              className={`nav-link ${location.pathname === "/shop" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-            >
-              Shop
-            </Link>
-
-            {authToken && user_role === "vendor" && (
-              <>
-                <Link
-                  to="/store-form"
-                  className={`nav-link ${location.pathname === "/store-form" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-                >
-                  Add Store
-                </Link>
-                <Link
-                  to="/product-form"
-                  className={`nav-link ${location.pathname === "/product-form" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-                >
-                  Add Product
-                </Link>
-              </>
-            )}
-
-            <Link
-              to="/about"
-              className={`nav-link ${location.pathname === "/about" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-            >
-              About Us
-            </Link>
-            <Link
-              to="/contact"
-              className={`nav-link ${location.pathname === "/contact" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-            >
-              Contact
-            </Link>
-
+          {/* NavLinks */}
+          <div className="hidden md:flex space-x-6 text-white font-medium">
+            <Link to="/" className={location.pathname === "/" ? "text-yellow-500" : ""}>Home</Link>
+            <Link to="/shop" className={location.pathname === "/shop" ? "text-yellow-500" : ""}>Shop</Link>
+            <Link to="/about" className={location.pathname === "/about" ? "text-yellow-500" : ""}>About</Link>
+            <Link to="/contact" className={location.pathname === "/contact" ? "text-yellow-500" : ""}>Contact</Link>
             {authToken && user_role === "admin" && (
-              <Link
-                to="/admin"
-                className={`nav-link ${location.pathname === "/admin" ? "text-yellow-500 border-b-2 border-yellow-500" : ""}`}
-              >
-                Admin Panel
-              </Link>
+              <Link to="/admin" className={location.pathname === "/admin" ? "text-yellow-500" : ""}>Admin</Link>
             )}
           </div>
 
@@ -96,14 +105,14 @@ function Navbar() {
               </Link>
             )}
 
-            {/* Notification Dropdown */}
+            {/* Notification Icon with Unread Count */}
             {authToken && (
               <div className="relative">
                 <button className="icon-link relative" onClick={() => setNotifOpen(!notifOpen)}>
                   <Bell size={24} />
-                  {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                      {notifications.length}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full">
+                      {unreadCount}
                     </span>
                   )}
                 </button>
@@ -113,9 +122,20 @@ function Navbar() {
                   <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg overflow-hidden">
                     {notifications.length > 0 ? (
                       <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
-                        {notifications.map((notif, index) => (
-                          <li key={index} className="px-4 py-2 text-sm hover:bg-gray-100">
-                            {notif.message}
+                        {notifications.map((notif) => (
+                          <li
+                            key={notif.id}
+                            className={`px-4 py-2 flex justify-between items-center text-sm hover:bg-gray-100 cursor-pointer ${
+                              notif.read ? "text-gray-500" : "font-bold"
+                            }`}
+                          >
+                            <span onClick={() => markAsRead(notif.id)}>{notif.message}</span>
+                            <button
+                              onClick={() => deleteNotification(notif.id)}
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              <FiTrash2 size={16} />
+                            </button>
                           </li>
                         ))}
                       </ul>
@@ -134,10 +154,14 @@ function Navbar() {
                 </button>
                 <div className="absolute right-0 mt-2 w-40 bg-white text-black shadow-lg rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">
-                    See Details
+                    Profile
                   </Link>
                   <button
-                    onClick={handleLogout}
+                    onClick={() => {
+                      dispatch(logout());
+                      sessionStorage.removeItem("refresh_token");
+                      navigate("/");
+                    }}
                     className="w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white transition"
                   >
                     Logout
