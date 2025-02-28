@@ -5,6 +5,7 @@ import { logout } from "../redux/slices/authSlice";
 import { FiHeart, FiUser, FiMenu, FiX, FiTrash2 } from "react-icons/fi";
 import { Bell } from "lucide-react";
 import axios from "axios";
+import io from "socket.io-client";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -16,10 +17,17 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const socket = io("http://localhost:8009", { transports: ["websocket", "polling", "flashsocket"] });
+
 
   // Fetch notifications
   useEffect(() => {
+
     if (authToken) {
+      socket.on("newNotification", (notification) => {
+        setNotifications((prevNotifications) => [notification, ...prevNotifications]);
+      });
+      
       axios
         .get("http://localhost:5008/notifications", {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -30,6 +38,10 @@ function Navbar() {
         .catch((error) => {
           console.error("Error fetching notifications:", error);
         });
+        
+        return () => {
+          socket.disconnect();
+        };
     }
   }, [authToken]);
 
