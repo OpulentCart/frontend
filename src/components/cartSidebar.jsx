@@ -66,6 +66,34 @@ const CartSidebar = ({ closeSidebar }) => {
     }
   };
 
+  // ✅ Function to handle checkout
+  const handleCheckout = async () => {
+    if (!authToken || cartProducts.length === 0) return;
+
+    const orderData = {
+      totalAmount: totalPrice,
+      products: cartProducts.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+      })),
+    };
+
+    try {
+      const response = await axios.post("http://localhost:5009/create-checkout-session", orderData, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      alert("Order placed successfully!");
+      console.log("Checkout Response:", response.data);
+
+      // Optionally, clear the cart after checkout
+      setCartProducts([]);
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      alert("Failed to place order. Try again!");
+    }
+  };
+
   return (
     <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl z-50 p-5 overflow-y-auto">
       {/* Close Button */}
@@ -121,7 +149,10 @@ const CartSidebar = ({ closeSidebar }) => {
 
       {/* Checkout Button */}
       {cartProducts.length > 0 && !loading && (
-        <button className="mt-4 w-full bg-black text-white py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition">
+        <button
+          className="mt-4 w-full bg-black text-white py-3 rounded-lg text-lg font-semibold hover:bg-gray-800 transition"
+          onClick={handleCheckout}
+        >
           Proceed to Checkout
         </button>
       )}
