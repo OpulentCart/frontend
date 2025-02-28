@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import CountdownTimer from "../components/countDown.jsx";
-import AdvertisementCarousel from "../components/AdvertisementCarousel.jsx";
+import AdvertisementCarousel from "../components/advertisementCarousel.jsx";
 import Loader from "../components/loader.jsx"; // Adjust path based on your project structure
 
 // Error Boundary Component
