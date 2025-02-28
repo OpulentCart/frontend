@@ -14,39 +14,25 @@ function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     try {
       const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-  
-        // Store tokens & role in Redux
-        dispatch(login({ access: data.access, refresh: data.refresh, role: data.role }));
-        localStorage.setItem("token", data.access);
-  
-        message.success("Login successful! Fetching cart...");
-  
-        // Step 2: Fetch Cart Data
-        const cartResponse = await fetch("http://localhost:5007/carts", {
-          method: "GET",
-          headers: { Authorization: `Bearer ${data.access}` }, // Attach token in headers
-        });
-  
-        if (cartResponse.ok) {
-          const cartData = await cartResponse.json();
-          console.log("Cart Data:", cartData);
-  
-          // Optionally store cart data in Redux (create a cart slice)
-          // dispatch(setCart(cartData));
-        } else {
-          console.warn("No cart found for this user.");
-        }
-  
+
+        // Dispatch tokens & role to Redux
+        dispatch(login({ 
+          access: data.access, 
+          refresh: data.refresh, 
+          role: data.role 
+        }));
+
+        message.success("Login successful! Redirecting...");
         setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
@@ -59,7 +45,6 @@ function LoginPage() {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-[#0a192f] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -176,4 +161,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default LoginPage;  //this is my login page
