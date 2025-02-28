@@ -4,8 +4,8 @@ import ProductCard from "../components/productCard";
 import CartSidebar from "../components/cartSidebar";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import Loader from "../../src/components/loader"; // Import the Loader component
-import { ShoppingCart } from "lucide-react"; // Importing cart icon
+import Loader from "../../src/components/loader"; 
+import { ShoppingCart } from "lucide-react"; 
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -28,7 +28,6 @@ class ErrorBoundary extends React.Component {
 
 const Shop = () => {
   const authToken = useSelector((state) => state.auth.access_token);
-
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -38,6 +37,7 @@ const Shop = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  const cartId = sessionStorage.getItem("cart_id");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +70,37 @@ const Shop = () => {
     fetchData();
   }, [authToken]);
 
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      if (!cartId || !authToken) return;
+
+      try {
+        // Fetch cart items
+        const cartResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const cartItemsData = cartResponse.data.cartItems;
+
+        // Fetch product details for each cart item
+        const productRequests = cartItemsData.map((item) =>
+          axios.get(`http://127.0.0.1:8001/related-products/${item.product_id}/`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          })
+        );
+
+        const productResponses = await Promise.all(productRequests);
+        const products = productResponses.map((res) => res.data);
+
+        setCartItems(products);
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+      }
+    };
+
+    fetchCartItems();
+  }, [cartId, authToken]);
+
   const filterProducts = (selectedCategories, selectedSubcategories) => {
     const filtered = products.filter((p) => {
       if (selectedCategories.length > 0) {
@@ -88,22 +119,6 @@ const Shop = () => {
     });
 
     setFilteredProducts(filtered);
-  };
-
-  const sidebarCategories = categories.map((cat) => ({
-    id: cat.category_id,
-    name: cat.name,
-    subcategories: subcategories
-      .filter((sub) => sub.category_id === cat.category_id)
-      .map((sub) => ({
-        subcategory_id: sub.sub_category_id,
-        name: sub.name,
-      })),
-  }));
-
-  const addToCart = (product) => {
-    setCartItems((prevCart) => [...prevCart, product]);
-    setIsCartOpen(true);
   };
 
   if (loading) return <Loader />;
@@ -140,7 +155,7 @@ const Shop = () => {
           } z-50`}
         >
           <ShopSidebar
-            categories={sidebarCategories}
+            categories={categories}
             onFilterChange={filterProducts}
             closeSidebar={() => setIsSidebarOpen(false)}
           />
@@ -177,14 +192,11 @@ const Shop = () => {
                 ratings: product.ratings,
                 main_image: product.main_image || "/default.jpg",
               }}
-              onLike={(id, liked) => console.log("Like toggled", id, liked)}
-              onAddToCart={() => addToCart(product)}
+              onAddToCart={() => setIsCartOpen(true)}
             />
           ))
         ) : (
-          <p className="text-center text-gray-600 w-full col-span-4">
-            {error ? error : "No products available"}
-          </p>
+          <p className="text-center text-gray-600 w-full col-span-4">No products available</p>
         )}
       </div>
     </div>
