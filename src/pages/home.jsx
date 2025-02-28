@@ -1,8 +1,33 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, Component } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 import CountdownTimer from "../components/countDown.jsx";
-import AdvertisementCarousel from "../components/advertisementCarousel"; 
+import AdvertisementCarousel from "../components/AdvertisementCarousel.jsx";
+import Loader from "../components/loader.jsx"; // Adjust path based on your project structure
+
+// Error Boundary Component
+class ErrorBoundary extends Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="text-center text-red-600 py-10">
+          <p>Something went wrong: {this.state.error?.message || "Unknown error"}</p>
+          <p>Please try refreshing the page or contact support.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const categories = [
   {
@@ -32,6 +57,12 @@ const categories = [
 ];
 
 function HomePage() {
+  const authToken = useSelector((state) => state.auth.access_token);
+  const navigate = useNavigate();
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+  const [errorRecommendations, setErrorRecommendations] = useState(null);
+
   const featuredProducts = [
     {
       id: 1,
@@ -58,103 +89,181 @@ function HomePage() {
       image: "/products/samsung-watch.jpg",
     },
   ];
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      setLoadingRecommendations(true);
+      setErrorRecommendations(null);
+
+      let userId = null;
+      if (authToken) {
+        try {
+          const decodedToken = jwtDecode(authToken);
+          console.log("Decoded Token:", decodedToken);
+          userId = decodedToken.user_id || decodedToken.id;
+        } catch (err) {
+          console.error("JWT Decode Error:", err);
+          setErrorRecommendations("Failed to decode user token.");
+          setLoadingRecommendations(false);
+          return;
+        }
+      } else {
+        setErrorRecommendations("Please log in to see recommendations.");
+        setLoadingRecommendations(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://127.0.0.1:8003/recommendations/${userId}/`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        console.log("Recommendations Response:", response.data);
+        setRecommendedProducts(response.data.recommended_products || []);
+      } catch (err) {
+        console.error("Recommendations Error:", err.response ? err.response.data : err.message);
+        setErrorRecommendations("Failed to fetch recommendations: " + (err.response?.data?.message || err.message));
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [authToken]);
+
   return (
-    <div className="min-h-screen bg-white">  
-      {/* <div className="relative w-full min-h-[70vh] md:h-[600px]">
-        <AdvertisementCarousel />
-      </div> */}
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <AdvertisementCarousel />
-      </div>
-    
-      {/* Categories Section */}
-      <div className="py-10 px-6">
-      <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Explore Categories</h2>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-white">
+        <div className="flex justify-center items-center min-h-screen bg-gray-100">
+          <AdvertisementCarousel />
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {categories.map((category, index) => (
-          <motion.div
-            key={category.name}
-            initial={{ opacity: 0, y: 50 }} // Fade-in and slide-up effect
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.2 }} // Staggered animation
-            whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.15)" }} // Hover effect
-            className="bg-gray-100 p-5 rounded-lg shadow-md cursor-pointer"
-          >
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">{category.name}</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {category.products.map((product) => (
-                <motion.div
-                  key={product.id}
-                  whileHover={{ scale: 1.1 }} // Image zoom effect on hover
-                  className="flex flex-col items-center"
-                >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                  <p className="text-sm text-gray-700 mt-2">{product.name}</p>
-                </motion.div>
-              ))}
+        {/* Categories Section */}
+        <div className="py-10 px-6">
+          <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Explore Categories</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {categories.map((category, index) => (
+              <motion.div
+                key={category.name}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.15)" }}
+                className="bg-gray-100 p-5 rounded-lg shadow-md cursor-pointer"
+              >
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">{category.name}</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {category.products.map((product) => (
+                    <motion.div
+                      key={product.id}
+                      whileHover={{ scale: 1.1 }}
+                      className="flex flex-col items-center"
+                    >
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-24 h-24 object-cover rounded-md"
+                        onError={(e) => (e.target.src = "/default.jpg")} // Fallback image
+                      />
+                      <p className="text-sm text-gray-700 mt-2">{product.name}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Limited-Time Offer Section */}
+        <div className="w-full bg-amber-100 text-black py-10 px-6 text-center">
+          <h2 className="text-3xl font-bold">🔥 Hurry! Limited-Time Offer</h2>
+          <p className="mt-2 text-lg">Grab the best deals before time runs out!</p>
+          <div className="flex justify-center mt-4">
+            <div className="bg-white text-red-600 px-4 py-2 rounded-md text-xl font-bold">
+              <CountdownTimer />
             </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-            {/* Limited-Time Offer Section */}
-      <div className="w-full bg-amber-100 text-black py-10 px-6 text-center">
-        <h2 className="text-3xl font-bold">🔥 Hurry! Limited-Time Offer</h2>
-        <p className="mt-2 text-lg">Grab the best deals before time runs out!</p>
-
-        {/* Countdown Timer */}
-        <div className="flex justify-center mt-4">
-          <div className="bg-white text-red-600 px-4 py-2 rounded-md text-xl font-bold">
-            <CountdownTimer/>{/* Update dynamically via JavaScript */}
           </div>
-        </div>
-
-        {/* Featured Deal Product */}
-        <div className="mt-6 flex flex-col md:flex-row justify-center items-center gap-6">
-          <div className="bg-white p-4 rounded-lg shadow-md text-black w-64">
-            <img src="/products/iphone14.jpg" alt="iPhone 14" className="w-full h-40 object-cover rounded-md" />
-            <h3 className="mt-2 text-lg font-semibold">Apple iPhone 14 Pro</h3>
-            <p className="text-red-500 font-bold">$799 <span className="text-gray-500 line-through">$999</span></p>
-            <Link to="/shop" className="mt-3 inline-block px-6 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-700 transition">
-              Shop Now
-            </Link>
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-md text-black w-64">
-            <img src="/products/nike-air-max.jpg" alt="Nike Air Max" className="w-full h-40 object-cover rounded-md" />
-            <h3 className="mt-2 text-lg font-semibold">Nike Air Max Sneakers</h3>
-            <p className="text-red-500 font-bold">$120 <span className="text-gray-500 line-through">$150</span></p>
-            <Link to="/shop" className="mt-3 inline-block px-6 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-700 transition">
-              Shop Now
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto py-12 px-6">
-        <h2 className="text-3xl font-bold text-gray-900 text-center">Featured Products</h2>
-        <p className="text-gray-600 text-center mt-2">Discover our top picks for you</p>
-
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-8">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="bg-gray-100 p-4 rounded-lg shadow-md hover:shadow-lg transition">
-              <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded-md" />
-              <h3 className="mt-4 text-lg font-semibold">{product.name}</h3>
-              <p className="text-yellow-600 font-bold">{product.price}</p>
-              <button className="mt-3 w-full py-2 bg-yellow-500 text-black font-semibold rounded-md hover:bg-yellow-600 transition">
-                Add to Cart
-              </button>
+          <div className="mt-6 flex flex-col md:flex-row justify-center items-center gap-6">
+            <div className="bg-white p-4 rounded-lg shadow-md text-black w-64">
+              <img src="/products/iphone14.jpg" alt="iPhone 14" className="w-full h-40 object-cover rounded-md" />
+              <h3 className="mt-2 text-lg font-semibold">Apple iPhone 14 Pro</h3>
+              <p className="text-red-500 font-bold">$799 <span className="text-gray-500 line-through">$999</span></p>
+              <Link to="/shop" className="mt-3 inline-block px-6 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-700 transition">
+                Shop Now
+              </Link>
             </div>
-          ))}
+            <div className="bg-white p-4 rounded-lg shadow-md text-black w-64">
+              <img src="/products/nike-air-max.jpg" alt="Nike Air Max" className="w-full h-40 object-cover rounded-md" />
+              <h3 className="mt-2 text-lg font-semibold">Nike Air Max Sneakers</h3>
+              <p className="text-red-500 font-bold">$120 <span className="text-gray-500 line-through">$150</span></p>
+              <Link to="/shop" className="mt-3 inline-block px-6 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-700 transition">
+                Shop Now
+              </Link>
+            </div>
           </div>
         </div>
-    </div>
+
+
+             {/* Suggested for You Section - Only visible if recommendations are available */}
+        {!loadingRecommendations && !errorRecommendations && recommendedProducts.length > 0 && (
+          <div className="max-w-7xl mx-auto py-12 px-6">
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-6">Suggested for You</h2>
+            <div className="relative">
+              <div
+                className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-6 pb-4 hide-scrollbar"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {recommendedProducts.map((product) => (
+                  <motion.div
+                    key={product.id}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className="snap-start flex-shrink-0 w-72 bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer"
+                    onClick={() => navigate(`/product/${product.id}`)}
+                  >
+                    <img
+                      src={product.main_image || "/default.jpg"}
+                      alt={product.name || "Product"}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">{product.name || "Unnamed Product"}</h3>
+                      <p className="text-sm text-gray-500">{product.brand || "Unknown Brand"}</p>
+                      <p className="text-xl font-bold text-gray-900 mt-2">₹ {product.price || "N/A"}</p>
+                      <p className="text-sm text-gray-500">
+                        Score: {(product.hybrid_score * 100).toFixed(2) || 0}%
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Featured Products Section */}
+        <div className="max-w-7xl mx-auto py-12 px-6">
+          <h2 className="text-3xl font-bold text-gray-900 text-center">Featured Products</h2>
+          <p className="text-gray-600 text-center mt-2">Discover our top picks for you</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+            {featuredProducts.map((product) => (
+              <div key={product.id} className="bg-gray-100 p-4 rounded-lg shadow-md hover:shadow-lg transition">
+                <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded-md" />
+                <h3 className="mt-4 text-lg font-semibold">{product.name}</h3>
+                <p className="text-yellow-600 font-bold">{product.price}</p>
+                <button className="mt-3 w-full py-2 bg-yellow-500 text-black font-semibold rounded-md hover:bg-yellow-600 transition">
+                  Add to Cart
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+       
+      </div>
+    </ErrorBoundary>
   );
 }
 
