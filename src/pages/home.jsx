@@ -60,7 +60,10 @@ function HomePage() {
   ];
   return (
     <div className="min-h-screen bg-white">  
-      <div className="relative w-full min-h-[70vh] md:h-[600px]">
+      {/* <div className="relative w-full min-h-[70vh] md:h-[600px]">
+        <AdvertisementCarousel />
+      </div> */}
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
         <AdvertisementCarousel />
       </div>
     

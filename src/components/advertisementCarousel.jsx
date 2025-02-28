@@ -1,117 +1,99 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
+import { motion } from "framer-motion"; // Import Framer Motion
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 
 const ads = [
   {
-    quote: "Style is a way to say who you are without having to speak.",
-    images: [
-      "/images/style1.jpg",
-      "https://source.unsplash.com/300x200/?shopping",
-      "https://source.unsplash.com/300x200/?store"
-    ],
-    bgColor: "bg-blue-100",
-    textColor: "text-blue-900"
+    quote: "Push your limits, break your records. Gear up with the best sports equipment",
+    image: "/images/Sports.jpg", // Ensure high-resolution images
   },
   {
-    quote: "Good things come to those who shop!",
-    images: [
-      "https://source.unsplash.com/300x200/?sale",
-      "https://source.unsplash.com/300x200/?discount",
-      "https://source.unsplash.com/300x200/?clothing"
-    ],
-    bgColor: "bg-purple-50",
-    textColor: "text-purple-900"
+    quote: "Because you deserve to feel as good as you look. Explore our beauty collection today!",
+    image: "/images/Beauty.jpg", // Ensure high-resolution images
   },
   {
     quote: "Upgrade your wardrobe, upgrade your life.",
-    images: [
-      "https://source.unsplash.com/300x200/?clothes",
-      "https://source.unsplash.com/300x200/?outfits",
-      "https://source.unsplash.com/300x200/?apparel"
-    ],
-    bgColor: "bg-yellow-100",
-    textColor: "text-yellow-900"
+    image: "/images/Furniture.jpg", // Ensure high-resolution images
+  },
+  {
+    quote: "Step into the spotlight with trends that turn heads. Shop the latest fashion now!",
+    image: "/images/Fashion.jpg", // Ensure high-resolution images
+  },
+  {
+    quote: "Transform your house into a home with smart appliances that make life easier.",
+    image: "/images/Appliances.png", // Ensure high-resolution images
+  },
+  {
+    quote: "Everyday essentials, delivered with care. Because convenience shouldn’t be a luxury.",
+    image: "/images/Grocery.jpg", // Ensure high-resolution images
+  },
+  {
+    quote: "Power up your life with gadgets that keep you ahead of the curve.",
+    image: "/images/Laptops.jpg"
   }
 ];
 
-export default function AdvertisementCarousel() {
-  const [currentAd, setCurrentAd] = useState(0);
-  const [imageIndex, setImageIndex] = useState(0);
+const AdvertisementCarousel = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showQuote, setShowQuote] = useState(false);
 
   useEffect(() => {
-    const adInterval = setInterval(() => {
-      setCurrentAd((prev) => (prev + 1) % ads.length);
-      setImageIndex(0); 
-    }, 10000);
+    // Reset the quote visibility when the active index changes
+    setShowQuote(false);
 
-    return () => clearInterval(adInterval);
-  }, []);
+    // Set a timeout to show the quote after 1 second
+    const timeout = setTimeout(() => {
+      setShowQuote(true);
+    }, 1000);
 
-  useEffect(() => {
-    const imgInterval = setInterval(() => {
-      setImageIndex((prev) => (prev + 1) % ads[currentAd].images.length);
-    }, 3000);
-
-    return () => clearInterval(imgInterval);
-  }, [currentAd]);
+    // Clear the timeout if the component unmounts or the active index changes
+    return () => clearTimeout(timeout);
+  }, [activeIndex]);
 
   return (
-    // <div
-    //   className={`w-full min-h-[70vh] md:h-[600px] flex items-center px-10 transition-all duration-500 ${ads[currentAd].bgColor}`}
-    // >
-    //   <motion.div
-    //     className="max-w-xl"
-    //     initial={{ opacity: 0, y: 50 }}
-    //     animate={{ opacity: 1, y: 0 }}
-    //     exit={{ opacity: 0, y: -50 }}
-    //     transition={{ duration: 0.8, ease: "easeOut" }}
-    //     key={currentAd}
-    //   >
-    //     <motion.h1
-    //       className={`text-6xl font-bold ${ads[currentAd].textColor}`}
-    //       initial={{ opacity: 0, x: -50 }}
-    //       animate={{ opacity: 1, x: 0 }}
-    //       exit={{ opacity: 0, x: 50 }}
-    //       transition={{ duration: 1 }}
-    //       key={currentAd}
-    //     >
-    //       {ads[currentAd].quote}
-    //     </motion.h1>
-    //   </motion.div>
-
-    //   <div className="w-1/2 flex justify-center items-center relative">
-    //     <motion.img
-    //       src={ads[currentAd].images[imageIndex]}
-    //       alt="Advertisement"
-    //       className="w-40 h-32 object-cover rounded-lg shadow-lg transition-opacity duration-500"
-    //       initial={{ opacity: 0, scale: 0.8 }}
-    //       animate={{ opacity: 1, scale: 1 }}
-    //       exit={{ opacity: 0, scale: 0.8 }}
-    //       transition={{ duration: 0.5 }}
-    //       key={imageIndex}
-    //     />
-    //   </div>
-    // </div>
-    <div className="flex flex-col gap-6 p-6">
-    {ads.map((ad, index) => (
-      <div
-        key={index}
-        className="relative w-full h-64 rounded-xl shadow-lg overflow-hidden"
-        style={{
-          backgroundImage: `url(${ad.image})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center"
-        }}
+    <div className="w-full max-w-7xl mx-auto mt-16"> {/* Added margin-top */}
+      <Swiper
+        modules={[Autoplay, Pagination, Navigation]}
+        autoplay={{ delay: 5000, disableOnInteraction: false }}
+        pagination={{ clickable: true }}
+        navigation
+        loop={true}
+        className="w-full h-[600px]"
+        onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
       >
-        {/* Overlay for better readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        {ads.map((ad, index) => (
+          <SwiperSlide key={index} className="relative w-full h-[600px]">
+            {/* Image (Loads Instantly) */}
+            <div className="w-full h-full">
+              <img
+                src={ad.image}
+                alt="Ad Image"
+                className="w-full h-full object-cover"
+                loading="lazy" // Optional: Lazy loading for better performance
+              />
+            </div>
 
-        {/* Quote on the right */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-70 text-gray-900 p-4 rounded-lg shadow-md w-1/3">
-          <p className="text-lg font-semibold text-right">{ad.quote}</p>
-        </div>
-      </div>
-    ))}
-  </div>
+            {/* Quote with Forced Re-Animation on Slide Change */}
+            {activeIndex === index && (
+              <motion.div
+                className="absolute right-10 top-1/3 text-white text-5xl font-bold max-w-md leading-tight"
+                initial={{ opacity: 0, x: 100 }}
+                animate={showQuote ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 1 }}
+                key={ad.quote} // Unique key forces re-animation when slide changes
+              >
+                {ad.quote}
+              </motion.div>
+            )}
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
   );
-}
+};
+
+export default AdvertisementCarousel;
