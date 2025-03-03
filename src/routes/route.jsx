@@ -20,6 +20,7 @@ import ProductDetails from "../pages/productDetails";
 import EditProfile from "../pages/user-profile/editProfile";
 import VendorDashboard from "../pages/vendor/vendorDashboard";
 import VendorProducts from "../pages/vendor/vendorProducts";
+import StoresList from "../pages/vendor/vendorStores";
 
 function AppRoutes() {
   return (
@@ -50,20 +51,46 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
+
+      {/* Vendor Routes - Only Accessible by Vendors */}
       <Route
-        path="/store-form"
+        path="/vendor/store-form"
         element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={["vendor"]}>
             <VendorForm />
-          </PrivateRoute>
+          </RoleBasedRoute>
         }
       />
       <Route
-        path="/product-form"
+        path="/vendor/product-form"
         element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={["vendor"]}>
             <CreateProductForm />
-          </PrivateRoute>
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/vendor/dashboard"
+        element={
+          <RoleBasedRoute allowedRoles={["vendor"]}>
+            <VendorDashboard />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/vendor/products"
+        element={
+          <RoleBasedRoute allowedRoles={["vendor"]}>
+            <VendorProducts />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/vendor/stores"
+        element={
+          <RoleBasedRoute allowedRoles={["vendor"]}>
+            <StoresList />
+          </RoleBasedRoute>
         }
       />
 
@@ -81,24 +108,6 @@ function AppRoutes() {
         <Route path="products" element={<ProductApproval />} />
         <Route path="users" element={<AdminUsers />} />
       </Route>
-
-      {/* Vendor Routes - Only Accessible by Vendors */}
-      <Route
-        path="/vendor/dashboard"
-        element={
-          <RoleBasedRoute allowedRoles={["vendor"]}>
-            <VendorDashboard />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/vendor/products"
-        element={
-          <RoleBasedRoute allowedRoles={["vendor"]}>
-            <VendorProducts />
-          </RoleBasedRoute>
-        }
-      />
     </Routes>
   );
 }

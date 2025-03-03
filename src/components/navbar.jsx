@@ -77,8 +77,21 @@ function Navbar() {
             <Link to="/shop" className={location.pathname === "/shop" ? "text-yellow-500" : ""}>Shop</Link>
             <Link to="/about" className={location.pathname === "/about" ? "text-yellow-500" : ""}>About</Link>
             <Link to="/contact" className={location.pathname === "/contact" ? "text-yellow-500" : ""}>Contact</Link>
+            
             {authToken && user_role === "admin" && (
               <Link to="/admin" className={location.pathname === "/admin" ? "text-yellow-500" : ""}>Admin</Link>
+            )}
+
+            {/* Vendor Links */}
+            {authToken && user_role === "vendor" && (
+              <>
+                <Link to="/vendor/product-form" className={location.pathname === "/product-form" ? "text-yellow-500" : ""}>
+                  Product Form
+                </Link>
+                <Link to="/vendor/store-form" className={location.pathname === "/vendor-form" ? "text-yellow-500" : ""}>
+                  Vendor Form
+                </Link>
+              </>
             )}
           </div>
 
@@ -173,8 +186,16 @@ function Navbar() {
             <Link to="/shop" className="block py-2" onClick={() => setMenuOpen(false)}>Shop</Link>
             <Link to="/about" className="block py-2" onClick={() => setMenuOpen(false)}>About</Link>
             <Link to="/contact" className="block py-2" onClick={() => setMenuOpen(false)}>Contact</Link>
+
             {authToken && user_role === "admin" && (
               <Link to="/admin" className="block py-2" onClick={() => setMenuOpen(false)}>Admin</Link>
+            )}
+
+            {authToken && user_role === "vendor" && (
+              <>
+                <Link to="/vendor/product-form" className="block py-2" onClick={() => setMenuOpen(false)}>Product Form</Link>
+                <Link to="/vendor/store-form" className="block py-2" onClick={() => setMenuOpen(false)}>Vendor Form</Link>
+              </>
             )}
           </div>
         )}

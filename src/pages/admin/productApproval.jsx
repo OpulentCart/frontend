@@ -23,7 +23,9 @@ const AdminProductApproval = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5004/products/admin/products");
+      const res = await axios.get("http://localhost:5004/products/admin/products",{
+        headers:{Authorization: `Bearer ${authToken}`}
+      });
 
       if (!res.data.products || !Array.isArray(res.data.products)) {
         console.error("API response is missing 'products' array.");
