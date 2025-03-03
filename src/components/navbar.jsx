@@ -5,6 +5,7 @@ import { logout } from "../redux/slices/authSlice";
 import { FiHeart, FiUser, FiMenu, FiX } from "react-icons/fi";
 import { Bell } from "lucide-react";
 import axios from "axios";
+import io from "socket.io-client";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -14,31 +15,44 @@ function Navbar() {
   const authToken = useSelector((state) => state.auth.access_token);
   const user_role = useSelector((state) => state.auth.user_role);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [socket, setSocket] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch notifications when component mounts
   useEffect(() => {
     if (authToken) {
+      const newSocket = io("http://localhost:5008");
+      setSocket(newSocket);
+      // Handle new notifications
+      newSocket.on("newNotification", (newNotif) => {
+        setNotifications((prevNotifications) => [...prevNotifications, newNotif]);
+        setUnreadCount((prevCount) => prevCount + 1);
+      });
+      
       axios
         .get("http://localhost:5008/notifications", {
           headers: { Authorization: `Bearer ${authToken}` },
         })
         .then((response) => {
-          setNotifications(response.data.notifications || []);
+          const fetchedNotifications = response.data.notifications || [];
+          setNotifications(fetchedNotifications);
+          setUnreadCount(fetchedNotifications.filter((notif) => !notif.is_read).length);
         })
         .catch((error) => {
           console.error("Error fetching notifications:", error);
         });
+
+      return () => newSocket.disconnect();
     }
   }, [authToken]);
 
   // Mark notification as read/unread
-  const markAsRead = async (notifId) => {
+  const markAllAsRead = async (notifId) => {
     try {
       const response = await axios.put(
-        "http://localhost:5008/notifications",
-        { notificationId: notifId },
+        "http://localhost:5008/notifications",{},
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
@@ -51,6 +65,14 @@ function Navbar() {
       }
     } catch (error) {
       console.error("Error marking notification as read:", error);
+    }
+  };
+
+  // Handle dropdown open and mark all as read
+  const toggleNotificationDropdown = async () => {
+    setNotifOpen(!notifOpen);
+    if (!notifOpen && unreadCount > 0) {
+      await markAllAsRead();
     }
   };
 
@@ -104,30 +126,24 @@ function Navbar() {
             )}
 
             {/* Notification Dropdown */}
+            {/* Notification Dropdown */}
             {authToken && (
               <div className="relative">
-                <button className="icon-link relative" onClick={() => setNotifOpen(!notifOpen)}>
+                <button className="icon-link relative" onClick={toggleNotificationDropdown}>
                   <Bell size={24} />
-                  {notifications.some((notif) => !notif.read) && (
+                  {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                      {notifications.filter((notif) => !notif.read).length}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
 
-                {/* Dropdown Content */}
                 {notifOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg overflow-hidden">
                     {notifications.length > 0 ? (
                       <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
                         {notifications.map((notif, index) => (
-                          <li
-                            key={index}
-                            className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${
-                              notif.read ? "text-gray-500" : "font-bold"
-                            }`}
-                            onClick={() => markAsRead(notif.id)}
-                          >
+                          <li key={index} className={`px-4 py-2 text-sm hover:bg-gray-100 ${notif.read ? "text-gray-500" : "font-bold"}`}>
                             {notif.message}
                           </li>
                         ))}
