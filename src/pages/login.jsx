@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../redux/slices/authSlice"; // Import Redux action
 import { message } from "antd";
+import showToast from "../components/showToast";
 
 function LoginPage() {
   const dispatch = useDispatch();
@@ -32,14 +33,14 @@ function LoginPage() {
           role: data.role 
         }));
 
-        message.success("Login successful! Redirecting...");
+        showToast({ label: "Login successfull!!!", type: "success" });
         setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
-        message.error(errorData.message || "Login failed. Please try again.");
+        showToast({ label: "Login failed. Please try again.", type: "error" });
       }
     } catch (error) {
-      message.error("Something went wrong. Please try again.");
+      showToast({ label: "Something went wrong! Please try Again Later", type: "error" });
       console.error("Error logging in:", error);
     } finally {
       setLoading(false);
