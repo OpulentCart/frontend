@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -7,41 +7,46 @@ import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 
 const API_URL = "http://localhost:5007/cart-items";
+const WISHLIST_API = "http://localhost:5004/wishlist"; // Wishlist API endpoint
 
-const ProductCard = ({ product, onLike }) => {
+const ProductCard = ({ product }) => {
   const [liked, setLiked] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const navigate = useNavigate();
   const authToken = useSelector((state) => state.auth.access_token);
 
+  const productName = String(product?.name || "Unknown Product");
+  const productBrand = String(product?.brand || "Unknown Brand");
+  const productPrice = Number(product?.price) || 0;
+  const productImage = product?.image || product?.main_image || "/placeholder.jpg";
+
   useEffect(() => {
     const initializeCartForUser = async () => {
       if (!authToken) return;
-  
+
       let cartId = sessionStorage.getItem("cart_id");
-  
+
       if (!cartId || cartId === "undefined") {
         try {
           const userId = getUserIdFromToken(authToken);
           if (!userId) return;
-  
+
           const createResponse = await axios.post(
             "http://localhost:5007/carts",
             { user_id: userId },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
-  
+
           cartId = createResponse.data?.cart?.cart_id;
           if (cartId) sessionStorage.setItem("cart_id", cartId);
         } catch (error) {
-          console.error("Error creating cart for new user:", error.response?.data || error.message);
+          console.error("Error creating cart for user:", error.response?.data || error.message);
         }
       }
     };
-  
+
     initializeCartForUser();
-  }, [authToken]); // Runs when authToken changes
-  
+  }, [authToken]);
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -54,7 +59,7 @@ const ProductCard = ({ product, onLike }) => {
         });
 
         const existingItem = response.data.cartItems.find(
-          (item) => item.product_id === product.id
+          (item) => item.product_id === product?.id
         );
 
         setIsInCart(!!existingItem);
@@ -64,9 +69,32 @@ const ProductCard = ({ product, onLike }) => {
     };
 
     fetchCartItems();
-  }, [product.id, authToken]);
+  }, [product?.id, authToken]);
 
-  const getUserIdFromToken = (token) => {
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!authToken) return;
+
+      try {
+        const response = await axios.get(WISHLIST_API, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const wishlistItems = response.data?.data || [];
+        const isProductInWishlist = wishlistItems.some(
+          (item) => item.product_id === product?.id
+        );
+
+        setLiked(isProductInWishlist);
+      } catch (error) {
+        console.error("Error fetching wishlist:", error.response?.data || error.message);
+      }
+    };
+
+    fetchWishlist();
+  }, [authToken, product?.id]);
+
+  const getUserIdFromToken = useCallback((token) => {
     try {
       const decoded = jwtDecode(token);
       return decoded?.user_id;
@@ -74,9 +102,9 @@ const ProductCard = ({ product, onLike }) => {
       console.error("Error decoding authToken:", error);
       return null;
     }
-  };
+  }, []);
 
-  const getOrCreateCart = async () => {
+  const getOrCreateCart = useCallback(async () => {
     if (!authToken) return null;
 
     const userId = getUserIdFromToken(authToken);
@@ -109,7 +137,7 @@ const ProductCard = ({ product, onLike }) => {
       console.error("Error fetching or creating cart:", error.response?.data || error.message);
       return null;
     }
-  };
+  }, [authToken, getUserIdFromToken]);
 
   const handleAddToCart = async () => {
     if (isInCart) return;
@@ -120,7 +148,7 @@ const ProductCard = ({ product, onLike }) => {
 
       await axios.post(
         API_URL,
-        { cart_id: cartId, product_id: product.id, quantity: 1 },
+        { cart_id: cartId, product_id: product?.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
       );
 
@@ -130,9 +158,33 @@ const ProductCard = ({ product, onLike }) => {
     }
   };
 
-  const handleLike = () => {
-    setLiked(!liked);
-    onLike(product.id, !liked);
+  const handleLike = async () => {
+    if (!authToken) {
+      console.error("User is not authenticated.");
+      return;
+    }
+
+    const newLikedState = !liked;
+    setLiked(newLikedState);
+
+    try {
+      if (newLikedState) {
+        // Add to wishlist
+        await axios.post(
+          WISHLIST_API,
+          { product_id: product?.id },
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+      } else {
+        // Remove from wishlist
+        await axios.delete(`${WISHLIST_API}/${product?.id}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error.response?.data || error.message);
+      setLiked(!newLikedState); // Revert state if there was an error
+    }
   };
 
   return (
@@ -140,9 +192,10 @@ const ProductCard = ({ product, onLike }) => {
       {/* Product Image & Like Button */}
       <div className="relative">
         <img
-          src={product.image || product.main_image || "/placeholder.jpg"}
-          alt={product.name}
+          src={productImage}
+          alt={productName}
           className="w-full h-52 object-contain rounded-lg"
+          onError={(e) => (e.target.src = "/placeholder.jpg")}
         />
 
         {/* Like Button */}
@@ -161,21 +214,18 @@ const ProductCard = ({ product, onLike }) => {
       {/* Product Info */}
       <h3
         className="text-lg font-semibold mt-3 text-gray-900 truncate cursor-pointer hover:text-blue-500 transition duration-300"
-        onClick={() => navigate(`/product/${product.id}`)}
+        onClick={() => navigate(`/product/${product?.id}`)}
       >
-        {product.name}
+        {productName}
       </h3>
 
-      <p className="text-gray-500 text-sm">
-        Brand: <span className="font-medium">{product.brand}</span>
-      </p>
-
-      <p className="text-gray-600 text-md font-medium">₹ {product.price}</p>
+      <p className="text-gray-500 text-sm">Brand: <span className="font-medium">{productBrand}</span></p>
+      <p className="text-gray-600 text-md font-medium">₹ {productPrice.toFixed(2)}</p>
 
       {/* Ratings */}
       <div className="flex items-center mt-2">
         <FaStar className="text-yellow-500" />
-        <span className="text-gray-700 text-sm ml-1">{product.ratings} / 5</span>
+        <span className="text-gray-700 text-sm ml-1">{product?.ratings || "No Rating"} / 5</span>
       </div>
 
       {/* "Add to Cart" Button */}

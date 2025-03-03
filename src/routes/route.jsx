@@ -21,6 +21,7 @@ import EditProfile from "../pages/user-profile/editProfile";
 import VendorDashboard from "../pages/vendor/vendorDashboard";
 import VendorProducts from "../pages/vendor/vendorProducts";
 import StoresList from "../pages/vendor/vendorStores";
+import Wishlist from "../pages/wishlist/wishlist";
 
 function AppRoutes() {
   return (
@@ -93,6 +94,17 @@ function AppRoutes() {
           </RoleBasedRoute>
         }
       />
+       {/* Customer Routes - Only Accessible by Admins */}
+
+      <Route
+        path="/wishlist"
+        element={
+          <RoleBasedRoute allowedRoles={["customer"]}>
+            <Wishlist />
+          </RoleBasedRoute>
+        }
+      />
+
 
       {/* Admin Routes - Only Accessible by Admins */}
       <Route
