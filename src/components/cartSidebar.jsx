@@ -52,6 +52,28 @@ const CartSidebar = ({ closeSidebar }) => {
   // ✅ Calculate total price
   const totalPrice = cartProducts.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  // ✅ Function to update cart item quantity
+  const handleUpdateQuantity = async (cartItemId, newQuantity) => {
+    if (newQuantity < 1) return; // Prevent quantity from going below 1
+
+    try {
+      await axios.put(
+        `http://localhost:5007/cart-items/${cartItemId}`,
+        { quantity: newQuantity },
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+
+      // Update UI instantly
+      setCartProducts((prev) =>
+        prev.map((item) =>
+          item.cart_item_id === cartItemId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    } catch (error) {
+      console.error("Error updating cart item quantity:", error);
+    }
+  };
+
   // ✅ Function to delete a cart item
   const handleDeleteItem = async (cartItemId) => {
     try {
@@ -118,7 +140,24 @@ const CartSidebar = ({ closeSidebar }) => {
                 <p className="font-medium text-gray-900 truncate w-52">{item.name}</p>
                 <p className="text-sm text-gray-500">Brand: {item.brand}</p>
                 <p className="text-sm text-gray-700 font-semibold">₹ {item.price.toFixed(2)}</p>
-                <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+
+                {/* Quantity Update Section */}
+                <div className="flex items-center space-x-2 mt-1">
+                  <button
+                    className="px-2 py-1 bg-gray-300 rounded-md hover:bg-gray-400"
+                    onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity - 1)}
+                  >
+                    -
+                  </button>
+                  <p className="text-sm font-medium">{item.quantity}</p>
+                  <button
+                    className="px-2 py-1 bg-gray-300 rounded-md hover:bg-gray-400"
+                    onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+
                 <p className="text-sm font-semibold text-gray-800">
                   Total: ₹ {(item.price * item.quantity).toFixed(2)}
                 </p>
