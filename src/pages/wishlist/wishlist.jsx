@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
   const authToken = useSelector((state) => state.auth.access_token);
 
   useEffect(() => {
@@ -23,6 +24,8 @@ const Wishlist = () => {
       setWishlist(response.data?.data || []);
     } catch (error) {
       console.error("Error fetching wishlist:", error.response?.data || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +59,12 @@ const Wishlist = () => {
     <div className="max-w-6xl mx-auto py-10 px-4 mt-15">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">My Wishlist</h1>
 
-      {wishlist.length === 0 ? (
+      {/* Loader */}
+      {loading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-yellow-500 border-t-transparent"></div>
+        </div>
+      ) : wishlist.length === 0 ? (
         <p className="text-center text-gray-500 text-lg">Your wishlist is empty.</p>
       ) : (
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -64,16 +72,16 @@ const Wishlist = () => {
             <motion.div
               key={item.wishlist_id}
               whileHover={{ scale: 1.02 }}
-              className="bg-white shadow-md rounded-lg p-4 transition-transform flex flex-col items-center"
+              className="bg-white shadow-md rounded-lg p-4 transition-transform flex flex-col items-center w-64 h-[340px]"
             >
               <img
                 src={item.product.main_image || "/placeholder.jpg"}
                 alt={item.product.name}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-40 object-cover rounded-lg"
               />
 
-              <div className="text-center mt-3">
-                <h2 className="text-lg font-semibold text-gray-800">{item.product.name}</h2>
+              <div className="text-center mt-3 w-full">
+                <h2 className="text-lg font-semibold text-gray-800 truncate w-full">{item.product.name}</h2>
                 <p className="text-gray-600 text-md font-medium mt-1">₹ {item.product.price}</p>
               </div>
 
