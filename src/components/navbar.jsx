@@ -34,25 +34,59 @@ function Navbar() {
 
   useEffect(() => {
     if (authToken) {
-      const newSocket = io("http://localhost:5007", {
-        query: { token: authToken },
-      });
-
-      newSocket.on("connect", () => console.log("Connected to Socket.IO server"));
-      newSocket.on("new_notification", (data) => {
-        setNotifications((prev) => [data, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-      });
-      newSocket.on("disconnect", () => console.log("Disconnected from Socket.IO server"));
-
+      const newSocket = io("http://localhost:5008");
       setSocket(newSocket);
+
+      // Handle new notifications
+      newSocket.on("newNotification", (newNotif) => {
+        setNotifications((prevNotifications) => [...prevNotifications, newNotif]);
+        setUnreadCount((prevCount) => prevCount + 1);
+      });
+
+      axios
+      .get("http://localhost:5008/notifications", {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      .then((response) => {
+        const fetchedNotifications = response.data.notifications || [];
+        setNotifications(fetchedNotifications);
+        setUnreadCount(fetchedNotifications.filter((notif) => !notif.is_read).length);
+      })
+      .catch((error) => {
+        console.error("Error fetching notifications:", error);
+      });
+      
       return () => newSocket.disconnect();
     }
   }, [authToken]);
 
-  const markNotificationsAsRead = () => {
-    setUnreadCount(0);
+   // Mark notification as read/unread
+   const markAllAsRead = async (notifId) => {
+    try {
+      const response = await axios.put(
+        "http://localhost:5008/notifications",{},
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+
+      if (response.data.success) {
+        setNotifications((prevNotifications) =>
+          prevNotifications.map((notif) =>
+            notif.id === notifId ? { ...notif, read: true } : notif
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  // Handle dropdown open and mark all as read
+  const toggleNotificationDropdown = async () => {
     setNotifOpen(!notifOpen);
+    if (!notifOpen && unreadCount > 0) {
+      await markAllAsRead();
+      setUnreadCount(0);
+    }
   };
 
   const handleLogout = () => {
@@ -77,7 +111,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <button onClick={() => navigate("/")} className="text-white text-2xl font-bold focus:outline-none">
-            Opulent
+            Opulent Cart
           </button>
 
           <div className="hidden md:flex space-x-6 text-white font-medium">
@@ -114,7 +148,9 @@ function Navbar() {
                 <button className="text-white hover:text-yellow-500" onClick={() => navigate("/wishlist")}>
                   <FiHeart size={22} />
                 </button>
-                <button className="relative text-white hover:text-yellow-500" onClick={markNotificationsAsRead}>
+                
+                <div className="relative">
+                <button className="relative text-white hover:text-yellow-500" onClick={toggleNotificationDropdown}>
                   <Bell size={22} />
                   {unreadCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
@@ -122,6 +158,23 @@ function Navbar() {
                     </span>
                   )}
                 </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg overflow-hidden">
+                    {notifications.length > 0 ? (
+                      <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                        {notifications.map((notif, index) => (
+                          <li key={index} className={`px-4 py-2 text-sm hover:bg-gray-100 ${notif.read ? "text-gray-500" : "font-bold"}`}>
+                            {notif.message}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-4 text-gray-500 text-center">No Notifications</div>
+                    )}
+                  </div>
+                )}
+              </div>
 
                 {/* Profile Dropdown */}
                 <div className="relative profile-dropdown">
@@ -159,18 +212,6 @@ function Navbar() {
           </div>
         </div>
       </div>
-
-      {notifOpen && (
-        <div className="absolute top-16 right-4 bg-white shadow-md rounded-md p-4 w-64">
-          {notifications.length === 0 ? (
-            <p className="text-gray-500">No new notifications</p>
-          ) : (
-            notifications.map((notif, index) => (
-              <p key={index} className="text-black">{notif.message}</p>
-            ))
-          )}
-        </div>
-      )}
     </nav>
   );
 }
