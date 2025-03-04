@@ -1,5 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";  
+import showToast from "../components/showToast";
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -51,7 +55,7 @@ function SignupPage() {
   // Generate OTP
   const handleGenerateOtp = async () => {
     if (!email || !isValidEmail(email)) {
-      alert("Please enter a valid email.");
+      showToast({ label: "Please enter a valid EMAIL", type: "warning" });
       return;
     }
 
@@ -66,13 +70,17 @@ function SignupPage() {
       const data = await response.json();
       if (response.ok) {
         setOtpSent(true);
+
         setOtpTimer(30); // Start 30-second timer
         alert(data.message || `OTP Sent to ${email}`);
+
+        showToast({ label: "OTP is sent", type: "success" });
+
       } else {
-        alert(data.error || "Failed to send OTP");
+        showToast({ label: "Failed to send OTP", type: "error" });
       }
     } catch (error) {
-      alert("Error sending OTP.");
+      showToast({ label: "Error in sending OTP", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -83,7 +91,7 @@ function SignupPage() {
     const otpCode = otp.join("").trim();
     
     if (otpCode.length !== 6 || isNaN(otpCode)) {
-      alert("Please enter a valid 6-digit OTP.");
+      showToast({ label: "Please enter a valid 6-digit OTP", type: "warning" });
       return;
     }
 
@@ -98,17 +106,47 @@ function SignupPage() {
       const data = await response.json();
       if (response.ok) {
         setOtpVerified(true);
-        alert("OTP Verified! You can now Login.");
+        showToast({ label: "OTP verified. Please login.", type: "success" });
         navigate("/login");
       } else {
-        alert(data.error || "Invalid OTP. Try again.");
+        showToast({ label: "Invalid OTP. Please try again.", type: "warning" });
       }
     } catch (error) {
-      alert("Error verifying OTP.");
+      showToast({ label: "Something went wrong!!", type: "error" });
     } finally {
       setLoading(false);
     }
   };
+
+  // Register User
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!otpVerified) {
+      showToast({ label: "Please verify your OTP first", type: "warning" });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch("https://dummyapi.com/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        showToast({ label: "User registered successfully!!!", type: "success" });
+      } else {
+        showToast({ label: "Failed to register", type: "error" });
+      }
+    } catch (error) {
+      showToast({ label: "Registration failed. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[#0a192f] flex flex-col justify-center py-12 sm:px-6 lg:px-8">

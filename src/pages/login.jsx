@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../redux/slices/authSlice"; // Import Redux action
-import { message } from "antd";
+import showToast from "../components/showToast";
 
 function LoginPage() {
   const dispatch = useDispatch();
@@ -10,46 +10,45 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     try {
       const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-  
+
         // Get token expiration time (60 minutes from now)
         const expirationTime = new Date().getTime() + 60 * 60 * 1000;
-  
+
         // Store tokens & expiration time
         localStorage.setItem("access", data.access);
         localStorage.setItem("refresh", data.refresh);
         localStorage.setItem("token_expiration", expirationTime);
-  
-        // Dispatch to Redux
+
+        // Dispatch tokens & role to Redux
         dispatch(login({ access: data.access, refresh: data.refresh, role: data.role }));
-  
-        message.success("Login successful! Redirecting...");
+
+        showToast({ label: "Login successful!", type: "success" });
         setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
-        message.error(errorData.message || "Login failed.");
+        showToast({ label: errorData.message || "Login failed. Please try again.", type: "error" });
       }
     } catch (error) {
-      message.error("Something went wrong.");
+      showToast({ label: "Something went wrong! Please try again later.", type: "error" });
       console.error("Error logging in:", error);
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-[#0a192f] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -166,4 +165,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;  //this is my login page
+export default LoginPage;
