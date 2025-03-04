@@ -5,9 +5,10 @@ const VendorOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("delivered"); // Default tab
+  const [expandedOrder, setExpandedOrder] = useState(null); // Track which order is expanded
   const navigate = useNavigate();
 
-  // Dummy orders data (hardcoded)
+  // Dummy orders data (hardcoded) with additional details for the dropdown
   useEffect(() => {
     // Simulate loading delay for 1 second to mimic API call
     const timer = setTimeout(() => {
@@ -18,6 +19,11 @@ const VendorOrders = () => {
           quantity: 2,
           total_price: 599.98,
           status: "delivered",
+          customer_name: "John Doe",
+          customer_email: "john.doe@email.com",
+          order_date: "2025-02-15",
+          shipping_address: "123 Main St, City, Country",
+          tracking_number: "TRACK123456",
         },
         {
           order_id: "ORD002",
@@ -25,6 +31,11 @@ const VendorOrders = () => {
           quantity: 1,
           total_price: 99.99,
           status: "pending",
+          customer_name: "Jane Smith",
+          customer_email: "jane.smith@email.com",
+          order_date: "2025-02-20",
+          shipping_address: "456 Oak Ave, Town, Country",
+          tracking_number: "TRACK789012",
         },
         {
           order_id: "ORD003",
@@ -32,6 +43,11 @@ const VendorOrders = () => {
           quantity: 1,
           total_price: 1299.00,
           status: "shipped",
+          customer_name: "Mike Johnson",
+          customer_email: "mike.johnson@email.com",
+          order_date: "2025-02-25",
+          shipping_address: "789 Pine Rd, Village, Country",
+          tracking_number: "TRACK345678",
         },
       ]);
       setLoading(false);
@@ -132,39 +148,54 @@ const VendorOrders = () => {
               ? shippedOrders
               : pendingOrders
             ).map((order) => (
-              <tr key={order.order_id} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{order.order_id}</td>
-                <td className="py-2 px-4 border-b">{order.product_name}</td>
-                <td className="py-2 px-4 border-b">{order.quantity}</td>
-                <td className="py-2 px-4 border-b">${order.total_price || 0}</td>
-                <td className="py-2 px-4 border-b">
-                  <select
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order.order_id, e.target.value)}
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      order.status === "delivered"
-                        ? "bg-green-200 text-green-800"
-                        : order.status === "pending"
-                        ? "bg-yellow-200 text-yellow-800"
-                        : "bg-blue-200 text-blue-800"
-                    }`}
-                  >
-                    {getAvailableStatuses(order.status).map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="py-2 px-4 border-b">
-                  <button
-                    onClick={() => navigate(`/vendor/order-details/${order.order_id}`)}
-                    className="p-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                  >
-                    View Details
-                  </button>
-                </td>
-              </tr>
+              <React.Fragment key={order.order_id}>
+                <tr className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b">{order.order_id}</td>
+                  <td className="py-2 px-4 border-b">{order.product_name}</td>
+                  <td className="py-2 px-4 border-b">{order.quantity}</td>
+                  <td className="py-2 px-4 border-b">${order.total_price || 0}</td>
+                  <td className="py-2 px-4 border-b">
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order.order_id, e.target.value)}
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        order.status === "delivered"
+                          ? "bg-green-200 text-green-800"
+                          : order.status === "pending"
+                          ? "bg-yellow-200 text-yellow-800"
+                          : "bg-blue-200 text-blue-800"
+                      }`}
+                    >
+                      {getAvailableStatuses(order.status).map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <button
+                      onClick={() => setExpandedOrder(order.order_id === expandedOrder ? null : order.order_id)}
+                      className="p-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    >
+                      {expandedOrder === order.order_id ? "Hide Details" : "View Details"}
+                    </button>
+                  </td>
+                </tr>
+                {expandedOrder === order.order_id && (
+                  <tr>
+                    <td colSpan="6" className="py-4 px-4 bg-gray-50 border-t">
+                      <div className="grid gap-2 text-sm text-gray-600">
+                        <p><strong>Customer Name:</strong> {order.customer_name}</p>
+                        <p><strong>Customer Email:</strong> {order.customer_email}</p>
+                        <p><strong>Order Date:</strong> {order.order_date}</p>
+                        <p><strong>Shipping Address:</strong> {order.shipping_address}</p>
+                        <p><strong>Tracking Number:</strong> {order.tracking_number}</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
