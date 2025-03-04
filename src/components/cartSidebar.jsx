@@ -154,12 +154,12 @@ const CartSidebar = ({ closeSidebar }) => {
       setError("Your cart is empty.");
       return;
     }
-
+  
     // Validate shipping details
     if (!validateShippingDetails()) {
       return;
     }
-
+  
     let userId, email;
     try {
       const decoded = jwtDecode(authToken);
@@ -173,7 +173,7 @@ const CartSidebar = ({ closeSidebar }) => {
       setError("Invalid token. Please log in again.");
       return;
     }
-
+  
     const orderData = {
       totalAmount: totalPrice,
       userId: userId,
@@ -186,21 +186,18 @@ const CartSidebar = ({ closeSidebar }) => {
         price: item.price,
       })),
     };
-
+  
     try {
       setError(null);
       setLoading(true);
-
+  
       // Step 1: Send shipping details to a dummy API
-      const dummyApiResponse = await axios.post(
-        "https://jsonplaceholder.typicode.com/posts",
-        {
-          title: "Shipping Details",
-          body: JSON.stringify(shippingDetails),
-          userId: userId,
-        }
-      );
-
+      await axios.post("https://jsonplaceholder.typicode.com/posts", {
+        title: "Shipping Details",
+        body: JSON.stringify(shippingDetails),
+        userId: userId,
+      });
+  
       // Step 2: Proceed with the checkout process
       const response = await axios.post(
         "http://localhost:5009/api/payment/create-checkout-session",
@@ -209,22 +206,29 @@ const CartSidebar = ({ closeSidebar }) => {
           headers: { Authorization: `Bearer ${authToken}` },
         }
       );
-
-      // Use stripePromise to redirect to Checkout
+  
       const stripe = await stripePromise;
       const { error: stripeError } = await stripe.redirectToCheckout({
         sessionId: response.data.id,
       });
-
+  
       if (stripeError) {
         throw new Error(stripeError.message);
       }
+  
+      // Step 3: If payment is successful, delete cart items
+      await axios.delete(`http://localhost:5007/cart-items/${cartId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+  
+      setCartProducts([]); // Clear the cart in UI
     } catch (error) {
       setError("Unexpected error during checkout: " + error.message);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl z-50 p-5 overflow-y-auto">

@@ -35,7 +35,7 @@ const VendorProducts = () => {
   // Fetch products for this vendor
   const fetchVendorProducts = async () => {
     try {
-      const res = await axios.get(`http://localhost:5002/vendors/${vendorId}/products`, {
+      const res = await axios.get(`http://localhost:5004/products/vendor/`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 

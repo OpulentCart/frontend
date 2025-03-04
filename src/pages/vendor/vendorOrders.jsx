@@ -1,60 +1,75 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const VendorOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("delivered"); // Default tab
-  const [expandedOrder, setExpandedOrder] = useState(null); // Track which order is expanded
+  const [activeTab, setActiveTab] = useState("delivered");
+  const [expandedOrder, setExpandedOrder] = useState(null);
+  const authToken = useSelector((state) => state.auth.access_token);
   const navigate = useNavigate();
 
-  // Dummy orders data (hardcoded) with additional details for the dropdown
   useEffect(() => {
-    // Simulate loading delay for 1 second to mimic API call
-    const timer = setTimeout(() => {
-      setOrders([
-        {
-          order_id: "ORD001",
-          product_name: "Smartphone X",
-          quantity: 2,
-          total_price: 599.98,
-          status: "delivered",
-          customer_name: "John Doe",
-          customer_email: "john.doe@email.com",
-          order_date: "2025-02-15",
-          shipping_address: "123 Main St, City, Country",
-          tracking_number: "TRACK123456",
-        },
-        {
-          order_id: "ORD002",
-          product_name: "Wireless Headphones",
-          quantity: 1,
-          total_price: 99.99,
-          status: "pending",
-          customer_name: "Jane Smith",
-          customer_email: "jane.smith@email.com",
-          order_date: "2025-02-20",
-          shipping_address: "456 Oak Ave, Town, Country",
-          tracking_number: "TRACK789012",
-        },
-        {
-          order_id: "ORD003",
-          product_name: "Laptop Pro",
-          quantity: 1,
-          total_price: 1299.00,
-          status: "shipped",
-          customer_name: "Mike Johnson",
-          customer_email: "mike.johnson@email.com",
-          order_date: "2025-02-25",
-          shipping_address: "789 Pine Rd, Village, Country",
-          tracking_number: "TRACK345678",
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get("http://localhost:5006/orders/vendor", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
 
-    return () => clearTimeout(timer); // Cleanup timer
-  }, []);
+        if (response.data.success) {
+          const orderedProducts = response.data.orderedProducts;
+
+          const ordersWithDetails = await Promise.all(
+            orderedProducts.map(async (order) => {
+              try {
+                const productResponse = await axios.get(
+                  `http://localhost:5004/products/${order.product_id}`,
+                  { headers: { Authorization: `Bearer ${authToken}` } }
+                );
+                return {
+                  ...order,
+                  productDetails: productResponse.data,
+                };
+              } catch (error) {
+                console.error("Error fetching product details:", error);
+                return { ...order, productDetails: {} };
+              }
+            })
+          );
+
+          setOrders(ordersWithDetails);
+        }
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [authToken]);
+
+  const updateOrderStatus = async (orderItemId, newStatus) => {
+    try {
+      console.log("Updating order ID:", orderItemId);
+
+      await axios.put(
+        `http://localhost:5006/orders/${orderItemId}`, // Use order_item_id
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.order_item_id === orderItemId ? { ...order, status: newStatus } : order
+        )
+      );
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -68,129 +83,80 @@ const VendorOrders = () => {
     return <p className="text-center text-gray-500">No orders found.</p>;
   }
 
-  // Filter orders by status
-  const deliveredOrders = orders.filter((order) => order.status === "delivered");
-  const shippedOrders = orders.filter((order) => order.status === "shipped");
-  const pendingOrders = orders.filter((order) => order.status === "pending");
-
-  // Handle status change for an order
-  const handleStatusChange = (orderId, newStatus) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.order_id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-  };
-
-  // Define possible status transitions
-  const getAvailableStatuses = (currentStatus) => {
-    switch (currentStatus) {
-      case "pending":
-        return ["pending", "shipped"]; // Can change to "shipped" only
-      case "shipped":
-        return ["shipped", "delivered"]; // Can change to "delivered" only
-      case "delivered":
-        return ["delivered"]; // No change allowed (already delivered)
-      default:
-        return [currentStatus];
-    }
+  const filteredOrders = {
+    delivered: orders.filter((order) => order.status === "delivered"),
+    shipped: orders.filter((order) => order.status === "shipped"),
+    pending: orders.filter((order) => order.status === "pending"),
   };
 
   return (
     <div className="p-4 mt-15 min-h-screen flex flex-col">
       <h2 className="text-xl font-bold mb-4">Your Orders</h2>
 
-      {/* Tab Navigation */}
       <div className="flex border-b mb-4">
-        <button
-          onClick={() => setActiveTab("delivered")}
-          className={`p-2 w-1/3 text-center ${
-            activeTab === "delivered" ? "border-b-2 border-green-500 font-semibold" : "text-gray-500"
-          }`}
-        >
-          Delivered
-        </button>
-        <button
-          onClick={() => setActiveTab("shipped")}
-          className={`p-2 w-1/3 text-center ${
-            activeTab === "shipped" ? "border-b-2 border-blue-500 font-semibold" : "text-gray-500"
-          }`}
-        >
-          Shipped
-        </button>
-        <button
-          onClick={() => setActiveTab("pending")}
-          className={`p-2 w-1/3 text-center ${
-            activeTab === "pending" ? "border-b-2 border-yellow-500 font-semibold" : "text-gray-500"
-          }`}
-        >
-          Pending
-        </button>
+        {["delivered", "shipped", "pending"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`p-2 w-1/3 text-center ${
+              activeTab === tab ? "border-b-2 border-green-500 font-semibold" : "text-gray-500"
+            }`}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
-      {/* Orders Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b text-left text-gray-600">Order ID</th>
+              <th className="py-2 px-4 border-b text-left text-gray-600">Order Item ID</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Product Name</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Quantity</th>
-              <th className="py-2 px-4 border-b text-left text-gray-600">Total Price</th>
+              <th className="py-2 px-4 border-b text-left text-gray-600">Price</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Status</th>
               <th className="py-2 px-4 border-b text-left text-gray-600">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {(activeTab === "delivered"
-              ? deliveredOrders
-              : activeTab === "shipped"
-              ? shippedOrders
-              : pendingOrders
-            ).map((order) => (
-              <React.Fragment key={order.order_id}>
+            {filteredOrders[activeTab].map((order) => (
+              <React.Fragment key={order.order_item_id}>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">{order.order_id}</td>
-                  <td className="py-2 px-4 border-b">{order.product_name}</td>
+                  <td className="py-2 px-4 border-b">{order.order_item_id}</td>
+                  <td className="py-2 px-4 border-b">{order.productDetails?.name || order.product_name}</td>
                   <td className="py-2 px-4 border-b">{order.quantity}</td>
-                  <td className="py-2 px-4 border-b">${order.total_price || 0}</td>
+                  <td className="py-2 px-4 border-b">${order.productDetails?.price || order.price}</td>
                   <td className="py-2 px-4 border-b">
                     <select
                       value={order.status}
-                      onChange={(e) => handleStatusChange(order.order_id, e.target.value)}
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        order.status === "delivered"
-                          ? "bg-green-200 text-green-800"
-                          : order.status === "pending"
-                          ? "bg-yellow-200 text-yellow-800"
-                          : "bg-blue-200 text-blue-800"
-                      }`}
+                      onChange={(e) => updateOrderStatus(order.order_item_id, e.target.value)}
+                      className="px-2 py-1 border rounded text-sm"
                     >
-                      {getAvailableStatuses(order.status).map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
+                      <option value="pending">Pending</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
                     </select>
                   </td>
                   <td className="py-2 px-4 border-b">
                     <button
-                      onClick={() => setExpandedOrder(order.order_id === expandedOrder ? null : order.order_id)}
+                      onClick={() => setExpandedOrder(expandedOrder === order.order_item_id ? null : order.order_item_id)}
                       className="p-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"
                     >
-                      {expandedOrder === order.order_id ? "Hide Details" : "View Details"}
+                      {expandedOrder === order.order_item_id ? "Hide Details" : "View Details"}
                     </button>
                   </td>
                 </tr>
-                {expandedOrder === order.order_id && (
+                {expandedOrder === order.order_item_id && (
                   <tr>
                     <td colSpan="6" className="py-4 px-4 bg-gray-50 border-t">
                       <div className="grid gap-2 text-sm text-gray-600">
-                        <p><strong>Customer Name:</strong> {order.customer_name}</p>
-                        <p><strong>Customer Email:</strong> {order.customer_email}</p>
-                        <p><strong>Order Date:</strong> {order.order_date}</p>
-                        <p><strong>Shipping Address:</strong> {order.shipping_address}</p>
-                        <p><strong>Tracking Number:</strong> {order.tracking_number}</p>
+                        <p><strong>Customer ID:</strong> {order.customer_id}</p>
+                        <p><strong>Order Item ID:</strong> {order.order_item_id}</p>
+                        <p><strong>Product Name:</strong> {order.productDetails?.name || order.product_name}</p>
+                        <p><strong>Price:</strong> ${order.productDetails?.price || order.price}</p>
+                        <p><strong>Quantity:</strong> {order.quantity}</p>
+                        <p><strong>Status:</strong> {order.status}</p>
                       </div>
                     </td>
                   </tr>
