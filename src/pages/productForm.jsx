@@ -22,49 +22,56 @@ const MultiStepProductForm = () => {
 
     useEffect(() => {
         if (!authToken) return;
-
+    
         const fetchVendorData = async () => {
             try {
-                const response = await axios.get("http://localhost:5002/vendors/store", {
+                const response = await axios.get("http://localhost:5002/vendors/stores", {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
                         "Content-Type": "application/json",
                     },
                 });
-
+    
                 if (response.data?.vendor?.length > 0) {
                     const firstVendor = response.data.vendor[0];
                     setVendorId(firstVendor.vendor_id);
                     setCategoryId(firstVendor.category_id);
+                    console.log("Vendor ID:", firstVendor.vendor_id);
+                    console.log("Category ID:", firstVendor.category_id);
                 }
             } catch (error) {
                 console.error("Error fetching vendor data:", error.response?.data || error.message);
             }
         };
-
+    
         fetchVendorData();
     }, [authToken]);
-
+    
     useEffect(() => {
         if (!categoryId || !authToken) return;
-
+    
         const fetchSubcategories = async () => {
             try {
+                console.log("Fetching subcategories for category ID:", categoryId);
                 const response = await axios.get("http://localhost:5004/subcategories", {
                     headers: { Authorization: `Bearer ${authToken}` },
                 });
-
+    
+                console.log("Subcategories Response:", response.data);
+    
                 if (response.data.success) {
                     const filteredSubcategories = response.data.subCategories.filter(sub => sub.category_id === categoryId);
+                    console.log("Filtered Subcategories:", filteredSubcategories);
                     setSubCategories(filteredSubcategories);
                 }
             } catch (error) {
                 console.error("Error fetching subcategories:", error.response?.data || error.message);
             }
         };
-
+    
         fetchSubcategories();
     }, [categoryId, authToken]);
+    
 
     const handleChange = (e) => {
         const { name, value } = e.target;
