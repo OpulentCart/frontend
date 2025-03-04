@@ -356,10 +356,10 @@ const ProductCard = ({ product, onLike }) => {
 
       <p className="text-gray-600 text-md font-medium">₹ {productPrice.toFixed(2)}</p>
 
-      <div className="flex items-center mt-2">
+      {/* <div className="flex items-center mt-2">
         <FaStar className="text-yellow-500" />
         <span className="text-gray-700 text-sm ml-1">{product?.ratings || "No Rating"} / 5</span>
-      </div>
+      </div> */}
 
       {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
 
