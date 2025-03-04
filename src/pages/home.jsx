@@ -8,6 +8,7 @@ import debounce from "lodash/debounce";
 import CountdownTimer from "../components/countDown.jsx";
 import AdvertisementCarousel from "../components/advertisementCarousel.jsx";
 import Loader from "../components/loader.jsx"; // Adjust path based on your project structure
+import useCart from "../hooks/useCart.js";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -59,10 +60,12 @@ const categories = [
 
 function HomePage() {
   const authToken = useSelector((state) => state.auth.access_token);
+  //const cartId = useCart(authToken);
   const navigate = useNavigate();
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(true);
   const [errorRecommendations, setErrorRecommendations] = useState(null);
+  const [cartId, setCartId] = useState(() => sessionStorage.getItem("cartId") || "");
 
   const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
 
@@ -93,7 +96,62 @@ function HomePage() {
     },
   ];
 
-  
+  const getUserIdFromToken = useCallback((token) => {
+    try {
+      const decoded = jwtDecode(token);
+      return decoded?.user_id;
+    } catch (error) {
+      console.error("Error decoding authToken:", error);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchOrCreateCart = async () => {
+      if (!authToken) return; // Exit if no token
+
+      const userId = getUserIdFromToken(authToken);
+      if (!userId) return null;
+
+      // Check session storage first
+      const storedCartId = sessionStorage.getItem("cartId");
+      if (storedCartId) {
+        setCartId(storedCartId);
+        return;
+      }
+
+      try {
+        // Fetch existing cart
+        const response = await axios.get("http://localhost:5007/carts", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        if (response.data.cartId) {
+          console.log("Cart exists:", response.data.cartId);
+          setCartId(response.data.cartId);
+          sessionStorage.setItem("cartId", response.data.cartId);
+        } else {
+          console.log("No cart found, creating a new one...");
+
+          // Create a new cart
+          const createCartResponse = await axios.post(
+            "http://localhost:5007/carts",
+            { user_id: userId },
+            { headers: { Authorization: `Bearer ${authToken}` } }
+          );
+
+          console.log("New cart created:", createCartResponse.data.cartId);
+          setCartId(createCartResponse.data.cartId);
+          sessionStorage.setItem("cartId", createCartResponse.data.cartId);
+        }
+      } catch (error) {
+        console.error("Error fetching/creating cart:", error.response?.data || error.message);
+      }
+    };
+
+    fetchOrCreateCart();
+  }, [authToken]);
+    
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -187,6 +245,7 @@ function HomePage() {
       <div className="min-h-screen bg-white">
         <div className="flex justify-center items-center min-h-screen bg-gray-100">
           <AdvertisementCarousel />
+          
         </div>
 
         {/* Categories Section */}

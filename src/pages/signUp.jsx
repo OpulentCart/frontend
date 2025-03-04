@@ -1,9 +1,5 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";  
-import showToast from "../components/showToast";
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -55,7 +51,7 @@ function SignupPage() {
   // Generate OTP
   const handleGenerateOtp = async () => {
     if (!email || !isValidEmail(email)) {
-      showToast({ label: "Please enter a valid EMAIL", type: "warning" });
+      alert("Please enter a valid email.");
       return;
     }
 
@@ -70,17 +66,13 @@ function SignupPage() {
       const data = await response.json();
       if (response.ok) {
         setOtpSent(true);
-
         setOtpTimer(30); // Start 30-second timer
         alert(data.message || `OTP Sent to ${email}`);
-
-        showToast({ label: "OTP is sent", type: "success" });
-
       } else {
-        showToast({ label: "Failed to send OTP", type: "error" });
+        alert(data.error || "Failed to send OTP");
       }
     } catch (error) {
-      showToast({ label: "Error in sending OTP", type: "error" });
+      alert("Error sending OTP.");
     } finally {
       setLoading(false);
     }
@@ -91,7 +83,7 @@ function SignupPage() {
     const otpCode = otp.join("").trim();
     
     if (otpCode.length !== 6 || isNaN(otpCode)) {
-      showToast({ label: "Please enter a valid 6-digit OTP", type: "warning" });
+      alert("Please enter a valid 6-digit OTP.");
       return;
     }
 
@@ -106,47 +98,17 @@ function SignupPage() {
       const data = await response.json();
       if (response.ok) {
         setOtpVerified(true);
-        showToast({ label: "OTP verified. Please login.", type: "success" });
+        alert("OTP Verified! You can now Login.");
         navigate("/login");
       } else {
-        showToast({ label: "Invalid OTP. Please try again.", type: "warning" });
+        alert(data.error || "Invalid OTP. Try again.");
       }
     } catch (error) {
-      showToast({ label: "Something went wrong!!", type: "error" });
+      alert("Error verifying OTP.");
     } finally {
       setLoading(false);
     }
   };
-
-  // Register User
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    if (!otpVerified) {
-      showToast({ label: "Please verify your OTP first", type: "warning" });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await fetch("https://dummyapi.com/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        showToast({ label: "User registered successfully!!!", type: "success" });
-      } else {
-        showToast({ label: "Failed to register", type: "error" });
-      }
-    } catch (error) {
-      showToast({ label: "Registration failed. Please try again.", type: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
 
   return (
     <div className="min-h-screen bg-[#0a192f] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -218,41 +180,40 @@ function SignupPage() {
             </div>
 
             {/* OTP Section */}
+            {otpSent && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300">Enter OTP</label>
+                <div className="flex justify-between gap-2 mt-1">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`otp-input-${index}`}
+                      type="text"
+                      value={digit}
+                      maxLength="1"
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-12 h-12 text-center border border-gray-600 rounded-md bg-gray-700 text-white text-xl font-bold"
+                    />
+                  ))}
+                </div>
 
-          {otpSent && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300">Enter OTP</label>
-              <div className="flex justify-between gap-2 mt-1">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`otp-input-${index}`}
-                    type="text"
-                    value={digit}
-                    maxLength="1"
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="w-12 h-12 text-center border border-gray-600 rounded-md bg-gray-700 text-white text-xl font-bold"
-                  />
-                ))}
+                {/* Timer Display */}
+                {otpSent && otpTimer > 0 && (
+                  <p className="text-sm text-yellow-400 mt-2 text-center">
+                    Resend OTP in {otpTimer} seconds
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  className="w-full mt-4 py-2 px-4 bg-green-500 text-black font-medium rounded-md hover:bg-green-600"
+                >
+                  {loading ? "Verifying..." : "Verify OTP"}
+                </button>
               </div>
-
-              {/* Timer Display */}
-              {otpSent && otpTimer > 0 && (
-                <p className="text-sm text-yellow-400 mt-2 text-center">
-                  Resend OTP in {otpTimer} seconds
-                </p>
-              )}
-
-              <button
-                type="button"
-                onClick={handleVerifyOtp}
-                className="w-full mt-4 py-2 px-4 bg-green-500 text-black font-medium rounded-md hover:bg-green-600"
-              >
-                {loading ? "Verifying..." : "Verify OTP"}
-              </button>
-            </div>
-          )}
+            )}
 
 
             {!otpSent && (
