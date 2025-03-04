@@ -16,7 +16,7 @@ const CartSidebar = ({ closeSidebar }) => {
 
   // State for shipping details
   const [shippingDetails, setShippingDetails] = useState({
-    streetAddress: "",
+    street: "",
     city: "",
     state: "",
     country: "",
@@ -137,8 +137,8 @@ const CartSidebar = ({ closeSidebar }) => {
   };
 
   const validateShippingDetails = () => {
-    const { streetAddress, city, state, country, pincode } = shippingDetails;
-    if (!streetAddress || !city || !state || !country || !pincode) {
+    const { street, city, state, country, pincode } = shippingDetails;
+    if (!street || !city || !state || !country || !pincode) {
       setError("Please fill in all shipping details.");
       return false;
     }
@@ -293,9 +293,9 @@ const CartSidebar = ({ closeSidebar }) => {
               <input
                 type="text"
                 name="streetAddress"
-                value={shippingDetails.streetAddress}
+                value={shippingDetails.street}
                 onChange={handleInputChange}
-                placeholder="Street Address"
+                placeholder="Street"
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                 required
               />
