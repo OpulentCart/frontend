@@ -33,11 +33,14 @@ const Shop = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
-  const [cartProductIds, setCartProductIds] = useState(new Set()); // To keep track of product ids already in the cart
+  const [cartProductIds, setCartProductIds] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(12);
   const cartId = sessionStorage.getItem("cart_id");
 
   // Fetch initial data (categories, subcategories, products)
@@ -60,10 +63,6 @@ const Shop = () => {
         const subcategoriesData = subcategoriesRes.data.subCategories || [];
         const productsData = productsRes.data.products || [];
 
-        console.log("Categories:", categoriesData);
-        console.log("Subcategories:", subcategoriesData);
-        console.log("Sample product:", productsData[0]);
-
         setCategories(categoriesData);
         setSubcategories(subcategoriesData);
         setProducts(productsData);
@@ -84,35 +83,31 @@ const Shop = () => {
     const fetchCartId = async () => {
       let cartId = sessionStorage.getItem("cart_id");
   
-      // If cart_id is not in sessionStorage and authToken exists, create a new cart
       if (!cartId && authToken) {
         try {
           const response = await axios.post(
             "http://localhost:5007/carts", 
-            { user_id: authToken }, // Replace with actual user identifier if necessary
+            { user_id: authToken },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
   
           if (response.data.success) {
-            cartId = response.data.cart_id; // Get the new cart ID from response
-            sessionStorage.setItem("cart_id", cartId); // Store the cart ID in session storage
-          } else {
-            console.error("Failed to create cart.");
+            cartId = response.data.cart_id;
+            sessionStorage.setItem("cart_id", cartId);
           }
         } catch (error) {
-          console.error("Error creating cart for user:", error.response?.data || error.message);
+          console.error("Error creating cart:", error.response?.data || error.message);
         }
       }
   
-      // If cart_id exists, set it in session storage (ensure it's available for future use)
       if (cartId) {
         sessionStorage.setItem("cart_id", cartId);
       }
     };
   
     fetchCartId();
-  }, [authToken]); // Only run when authToken changes
-  
+  }, [authToken]);
+
   // Fetch cart items
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -135,20 +130,18 @@ const Shop = () => {
         const products = productResponses.map((res) => res.data);
   
         setCartItems(products);
-        setCartProductIds(new Set(cartItemsData.map((item) => item.product_id))); // Update the set of product IDs
+        setCartProductIds(new Set(cartItemsData.map((item) => item.product_id)));
       } catch (error) {
         console.error("Error fetching cart items:", error);
       }
     };
   
     fetchCartItems();
-  }, [authToken]); // Fetch cart items when authToken or cart_id changes
-  
+  }, [authToken]);
 
   // Filter products based on category and subcategory IDs
   const filterProducts = ({ categoryId, subcategoryId }) => {
-    console.log("Filtering with:", { categoryId, subcategoryId });
-
+    setPageLoading(true);
     let filtered = [...products];
 
     if (subcategoryId) {
@@ -160,8 +153,9 @@ const Shop = () => {
       filtered = filtered.filter((p) => subIds.includes(p.sub_category_id));
     }
 
-    console.log("Filtered products:", filtered);
     setFilteredProducts(filtered);
+    setCurrentPage(1);
+    setTimeout(() => setPageLoading(false), 500);
   };
 
   // Add product to cart and open cart sidebar
@@ -193,8 +187,8 @@ const Shop = () => {
       const products = productResponses.map((res) => res.data);
 
       setCartItems(products);
-      setCartProductIds(new Set(cartItemsData.map((item) => item.product_id))); // Update the set of product IDs
-      setIsCartOpen(true); // Open cart sidebar after adding item
+      setCartProductIds(new Set(cartItemsData.map((item) => item.product_id)));
+      setIsCartOpen(true);
     } catch (error) {
       console.error("Error adding to cart:", error);
     }
@@ -211,6 +205,24 @@ const Shop = () => {
         name: sub.name,
       })),
   }));
+
+  // Pagination logic
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  const paginate = (pageNumber) => {
+    setPageLoading(true);
+    setCurrentPage(pageNumber);
+    setTimeout(() => setPageLoading(false), 500);
+  };
+
+  // Generate page numbers for display
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
 
   if (loading) return <Loader />;
   if (error) return <p className="text-center text-gray-600 py-10">{error}</p>;
@@ -275,25 +287,76 @@ const Shop = () => {
       )}
 
       {/* Product Grid */}
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 px-4">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <ProductCard
-              key={product.product_id}
-              product={{
-                id: product.product_id,
-                name: product.name,
-                brand: product.brand,
-                price: product.price,
-                ratings: product.ratings,
-                main_image: product.main_image || "/default.jpg",
-              }}
-              onAddToCart={() => handleAddToCart(product.product_id)}
-              isAddedToCart={cartProductIds.has(product.product_id)} // Disable button if already added to cart
-            />
-          ))
+      <div className="w-full px-4">
+        {pageLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader />
+          </div>
         ) : (
-          <p className="text-center text-gray-600 w-full col-span-4">No products available</p>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+              {currentProducts.length > 0 ? (
+                currentProducts.map((product) => (
+                  <ProductCard
+                    key={product.product_id}
+                    product={{
+                      id: product.product_id,
+                      name: product.name,
+                      brand: product.brand,
+                      price: product.price,
+                      ratings: product.ratings,
+                      main_image: product.main_image || "/default.jpg",
+                    }}
+                    onAddToCart={() => handleAddToCart(product.product_id)}
+                    isAddedToCart={cartProductIds.has(product.product_id)}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-gray-600 w-full col-span-4">No products available</p>
+              )}
+            </div>
+
+            {/* Enhanced Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col items-center mt-10">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-l-md disabled:bg-gray-400 hover:bg-gray-700 transition-colors duration-200 flex items-center"
+                  >
+                    ← Prev
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  {pageNumbers.map((number) => (
+                    <button
+                      key={number}
+                      onClick={() => paginate(number)}
+                      className={`px-4 py-2 ${
+                        currentPage === number
+                          ? "bg-yellow-500 text-white"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      } transition-colors duration-200`}
+                    >
+                      {number}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-r-md disabled:bg-gray-400 hover:bg-gray-700 transition-colors duration-200 flex items-center"
+                  >
+                    Next →
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Showing {indexOfFirstProduct + 1} - {Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
