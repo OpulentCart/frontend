@@ -23,6 +23,7 @@ import VendorProducts from "../pages/vendor/vendorProducts";
 import StoresList from "../pages/vendor/vendorStores";
 import Wishlist from "../pages/wishlist/wishlist";
 import OrderPage from "../pages/orders/order";
+import VendorOrders from "../pages/vendor/vendorOrders";
 
 function AppRoutes() {
   return (
@@ -92,6 +93,14 @@ function AppRoutes() {
         element={
           <RoleBasedRoute allowedRoles={["vendor"]}>
             <StoresList />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/vendor/orders"
+        element={
+          <RoleBasedRoute allowedRoles={["vendor"]}>
+            < VendorOrders/>
           </RoleBasedRoute>
         }
       />
