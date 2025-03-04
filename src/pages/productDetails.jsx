@@ -278,7 +278,7 @@ const ProductDetails = () => {
               <span className="text-gray-700 ml-2 text-sm">{validRating} / 5</span>
             </div>
 
-            <p className="text-gray-600 text-sm">Likes: <span className="font-medium">{product.likes}</span></p>
+            {/* <p className="text-gray-600 text-sm">Likes: <span className="font-medium">{product.likes}</span></p> */}
             <p
               className={`text-base font-medium ${
                 product.stock > 0 ? "text-green-600" : "text-red-600"
