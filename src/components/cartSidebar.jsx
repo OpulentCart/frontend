@@ -292,7 +292,7 @@ const CartSidebar = ({ closeSidebar }) => {
             <div className="space-y-4">
               <input
                 type="text"
-                name="streetAddress"
+                name="street"
                 value={shippingDetails.street}
                 onChange={handleInputChange}
                 placeholder="Street"
