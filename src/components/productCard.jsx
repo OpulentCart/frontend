@@ -26,7 +26,7 @@ const ProductCard = ({ product, onLike }) => {
 
   console.log("Frontend: ProductCard rendered with product:", product);
 
-  // Initialize cart for user
+  // Initialize cart for user (unchanged)
   useEffect(() => {
     const initializeCartForUser = async () => {
       if (!authToken) return;
@@ -55,7 +55,7 @@ const ProductCard = ({ product, onLike }) => {
     initializeCartForUser();
   }, [authToken]);
 
-  // Fetch cart items to check if product is in cart
+  // Fetch cart items to check if product is in cart (unchanged)
   useEffect(() => {
     const fetchCartItems = async () => {
       const cartId = sessionStorage.getItem("cart_id");
@@ -78,7 +78,7 @@ const ProductCard = ({ product, onLike }) => {
     fetchCartItems();
   }, [product?.id, authToken]);
 
-  // Fetch wishlist status
+  // Fetch wishlist status (unchanged)
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!authToken) return;
@@ -148,10 +148,12 @@ const ProductCard = ({ product, onLike }) => {
   const handleAddToCart = async () => {
     if (isInCart || !authToken) return;
 
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const cartId = await getOrCreateCart();
-      if (!cartId) return;
+      if (!cartId) {
+        throw new Error("Failed to get or create cart");
+      }
 
       await axios.post(
         API_URL,
@@ -159,8 +161,37 @@ const ProductCard = ({ product, onLike }) => {
         { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
       );
       setIsInCart(true);
+
+      const userId = getUserIdFromToken(authToken);
+      if (!userId) throw new Error("Invalid user token");
+
+      const interactionPayload = {
+        user_id: Number(userId),
+        product_id: Number(product.id),
+        interaction_type: "add_to_cart",
+        rating: 0,
+        timestamp: new Date().toISOString(),
+      };
+
+      const interactionResponse = await axios.post(
+        INTERACTION_API_URL,
+        interactionPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Interaction recorded:", interactionResponse.data);
     } catch (error) {
-      console.error("Error adding to cart:", error.response?.data || error.message);
+      console.error("Error in handleAddToCart:", {
+        message: error.message,
+        response: error.response?.data,
+      });
+      setError("Failed to add to cart or record interaction. Please try again.");
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsLoading(false);
     }
@@ -177,6 +208,7 @@ const ProductCard = ({ product, onLike }) => {
     if (onLike) onLike(product?.id, newLikedState);
 
     try {
+      // Step 1: Update the wishlist
       if (newLikedState) {
         await axios.post(
           WISHLIST_API,
@@ -188,9 +220,40 @@ const ProductCard = ({ product, onLike }) => {
           headers: { Authorization: `Bearer ${authToken}` },
         });
       }
+
+      // Step 2: Record the "liked" interaction with the same payload structure as "add_to_cart"
+      const userId = getUserIdFromToken(authToken);
+      if (!userId) throw new Error("Invalid user token");
+
+      const interactionPayload = {
+        user_id: Number(userId),
+        product_id: Number(product.id),
+        interaction_type: "wishlist", // Only difference from "add_to_cart"
+        rating: 0,
+        timestamp: new Date().toISOString(),
+      };
+
+      const interactionResponse = await axios.post(
+        INTERACTION_API_URL,
+        interactionPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Like interaction recorded:", interactionResponse.data);
     } catch (error) {
-      console.error("Error updating wishlist:", error.response?.data || error.message);
+      console.error("Error updating wishlist or recording interaction:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       setLiked(!newLikedState); // Revert state on error
+      setError("Failed to update wishlist or record interaction. Please try again.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 

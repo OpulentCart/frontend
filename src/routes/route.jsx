@@ -22,6 +22,7 @@ import VendorDashboard from "../pages/vendor/vendorDashboard";
 import VendorProducts from "../pages/vendor/vendorProducts";
 import StoresList from "../pages/vendor/vendorStores";
 import Wishlist from "../pages/wishlist/wishlist";
+import OrderPage from "../pages/orders/order";
 
 function AppRoutes() {
   return (
@@ -94,8 +95,7 @@ function AppRoutes() {
           </RoleBasedRoute>
         }
       />
-       {/* Customer Routes - Only Accessible by Admins */}
-
+       {/* Customer Routes - Only Accessible by Customers */}
       <Route
         path="/wishlist"
         element={
@@ -104,8 +104,15 @@ function AppRoutes() {
           </RoleBasedRoute>
         }
       />
-
-
+      <Route
+        path="/orders"
+        element={
+          <RoleBasedRoute allowedRoles={["customer"]}>
+            <OrderPage />
+          </RoleBasedRoute>
+        }
+      />
+      
       {/* Admin Routes - Only Accessible by Admins */}
       <Route
         path="/admin"
