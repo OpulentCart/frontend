@@ -180,6 +180,7 @@ const CartSidebar = ({ closeSidebar }) => {
       email: email || 'customer@example.com',
       shippingDetails: shippingDetails,
       items: cartProducts.map((item) => ({
+        product_id: item.product_id,
         name: item.name,
         quantity: item.quantity,
         price: item.price,
