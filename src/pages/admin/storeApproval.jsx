@@ -166,7 +166,13 @@ const ApproveStore = () => {
                         <td colSpan="3" className="p-4 bg-gray-50 border-b">
                           <p><strong>Email:</strong> {store.business_email}</p>
                           <p><strong>Phone:</strong> {store.business_phone}</p>
-                          <p><strong>Address:</strong> {store.street_address}, {store.city}, {store.state}, {store.country} - {store.pincode}</p>
+                          <p>
+                            <strong>Address:</strong>{" "}
+                            {store.address
+                              ? `${store.address.street}, ${store.address.city}, ${store.address.state}, ${store.address.country} - ${store.address.pincode}`
+                              : "N/A"}
+                          </p>
+
                           <p><strong>Description:</strong> {store.store_description}</p>
                           <p><strong>Business Document:</strong> {store.business_document}</p>
                           <p><strong>Certificate:</strong> {store.certificate}</p>
