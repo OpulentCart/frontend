@@ -37,6 +37,7 @@ const Shop = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  const [cartProductIds, setCartProductIds] = useState(new Set()); // To keep track of product ids already in the cart
   const cartId = sessionStorage.getItem("cart_id");
 
   // Fetch initial data (categories, subcategories, products)
@@ -78,34 +79,71 @@ const Shop = () => {
     fetchData();
   }, [authToken]);
 
+  // Check for cart id, create a new cart if it doesn't exist
+  useEffect(() => {
+    const fetchCartId = async () => {
+      let cartId = sessionStorage.getItem("cart_id");
+  
+      // If cart_id is not in sessionStorage and authToken exists, create a new cart
+      if (!cartId && authToken) {
+        try {
+          const response = await axios.post(
+            "http://localhost:5007/carts", 
+            { user_id: authToken }, // Replace with actual user identifier if necessary
+            { headers: { Authorization: `Bearer ${authToken}` } }
+          );
+  
+          if (response.data.success) {
+            cartId = response.data.cart_id; // Get the new cart ID from response
+            sessionStorage.setItem("cart_id", cartId); // Store the cart ID in session storage
+          } else {
+            console.error("Failed to create cart.");
+          }
+        } catch (error) {
+          console.error("Error creating cart for user:", error.response?.data || error.message);
+        }
+      }
+  
+      // If cart_id exists, set it in session storage (ensure it's available for future use)
+      if (cartId) {
+        sessionStorage.setItem("cart_id", cartId);
+      }
+    };
+  
+    fetchCartId();
+  }, [authToken]); // Only run when authToken changes
+  
   // Fetch cart items
   useEffect(() => {
     const fetchCartItems = async () => {
+      const cartId = sessionStorage.getItem("cart_id");
       if (!cartId || !authToken) return;
-
+  
       try {
         const cartResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-
+  
         const cartItemsData = cartResponse.data.cartItems || [];
         const productRequests = cartItemsData.map((item) =>
           axios.get(`http://127.0.0.1:8001/related-products/${item.product_id}/`, {
             headers: { Authorization: `Bearer ${authToken}` },
           })
         );
-
+  
         const productResponses = await Promise.all(productRequests);
         const products = productResponses.map((res) => res.data);
-
+  
         setCartItems(products);
+        setCartProductIds(new Set(cartItemsData.map((item) => item.product_id))); // Update the set of product IDs
       } catch (error) {
         console.error("Error fetching cart items:", error);
       }
     };
-
+  
     fetchCartItems();
-  }, [cartId, authToken]);
+  }, [authToken]); // Fetch cart items when authToken or cart_id changes
+  
 
   // Filter products based on category and subcategory IDs
   const filterProducts = ({ categoryId, subcategoryId }) => {
@@ -155,6 +193,7 @@ const Shop = () => {
       const products = productResponses.map((res) => res.data);
 
       setCartItems(products);
+      setCartProductIds(new Set(cartItemsData.map((item) => item.product_id))); // Update the set of product IDs
       setIsCartOpen(true); // Open cart sidebar after adding item
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -250,6 +289,7 @@ const Shop = () => {
                 main_image: product.main_image || "/default.jpg",
               }}
               onAddToCart={() => handleAddToCart(product.product_id)}
+              isAddedToCart={cartProductIds.has(product.product_id)} // Disable button if already added to cart
             />
           ))
         ) : (

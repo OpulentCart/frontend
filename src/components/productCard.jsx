@@ -5,13 +5,17 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
+import debounce from "lodash/debounce";
 
 const API_URL = "http://localhost:5007/cart-items";
-const WISHLIST_API = "http://localhost:5004/wishlist"; // Wishlist API endpoint
+const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
+const WISHLIST_API = "http://localhost:5004/wishlist";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onLike }) => {
   const [liked, setLiked] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const authToken = useSelector((state) => state.auth.access_token);
 
@@ -20,6 +24,9 @@ const ProductCard = ({ product }) => {
   const productPrice = Number(product?.price) || 0;
   const productImage = product?.image || product?.main_image || "/placeholder.jpg";
 
+  console.log("Frontend: ProductCard rendered with product:", product);
+
+  // Initialize cart for user
   useEffect(() => {
     const initializeCartForUser = async () => {
       if (!authToken) return;
@@ -40,7 +47,7 @@ const ProductCard = ({ product }) => {
           cartId = createResponse.data?.cart?.cart_id;
           if (cartId) sessionStorage.setItem("cart_id", cartId);
         } catch (error) {
-          console.error("Error creating cart for user:", error.response?.data || error.message);
+          console.error("Error creating cart:", error.response?.data || error.message);
         }
       }
     };
@@ -48,10 +55,11 @@ const ProductCard = ({ product }) => {
     initializeCartForUser();
   }, [authToken]);
 
+  // Fetch cart items to check if product is in cart
   useEffect(() => {
     const fetchCartItems = async () => {
       const cartId = sessionStorage.getItem("cart_id");
-      if (!cartId) return;
+      if (!cartId || !authToken) return;
 
       try {
         const response = await axios.get(`${API_URL}/${cartId}`, {
@@ -61,7 +69,6 @@ const ProductCard = ({ product }) => {
         const existingItem = response.data.cartItems.find(
           (item) => item.product_id === product?.id
         );
-
         setIsInCart(!!existingItem);
       } catch (error) {
         console.error("Error fetching cart items:", error);
@@ -71,6 +78,7 @@ const ProductCard = ({ product }) => {
     fetchCartItems();
   }, [product?.id, authToken]);
 
+  // Fetch wishlist status
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!authToken) return;
@@ -84,7 +92,6 @@ const ProductCard = ({ product }) => {
         const isProductInWishlist = wishlistItems.some(
           (item) => item.product_id === product?.id
         );
-
         setLiked(isProductInWishlist);
       } catch (error) {
         console.error("Error fetching wishlist:", error.response?.data || error.message);
@@ -131,18 +138,18 @@ const ProductCard = ({ product }) => {
 
         if (cartId) sessionStorage.setItem("cart_id", cartId);
       }
-
       return cartId;
     } catch (error) {
-      console.error("Error fetching or creating cart:", error.response?.data || error.message);
+      console.error("Error managing cart:", error.response?.data || error.message);
       return null;
     }
   }, [authToken, getUserIdFromToken]);
 
   const handleAddToCart = async () => {
-    if (isInCart) return;
+    if (isInCart || !authToken) return;
 
     try {
+      setIsLoading(true);
       const cartId = await getOrCreateCart();
       if (!cartId) return;
 
@@ -151,10 +158,11 @@ const ProductCard = ({ product }) => {
         { cart_id: cartId, product_id: product?.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
       );
-
       setIsInCart(true);
     } catch (error) {
-      console.error("Error adding product to cart:", error);
+      console.error("Error adding to cart:", error.response?.data || error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -166,30 +174,90 @@ const ProductCard = ({ product }) => {
 
     const newLikedState = !liked;
     setLiked(newLikedState);
+    if (onLike) onLike(product?.id, newLikedState);
 
     try {
       if (newLikedState) {
-        // Add to wishlist
         await axios.post(
           WISHLIST_API,
           { product_id: product?.id },
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
       } else {
-        // Remove from wishlist
         await axios.delete(`${WISHLIST_API}/${product?.id}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
       }
     } catch (error) {
       console.error("Error updating wishlist:", error.response?.data || error.message);
-      setLiked(!newLikedState); // Revert state if there was an error
+      setLiked(!newLikedState); // Revert state on error
     }
   };
 
+  const debouncedHandleCardClick = useCallback(
+    debounce(async (e) => {
+      e.stopPropagation();
+      if (!authToken || !product?.id) {
+        console.error("Missing authentication or product data");
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const userId = getUserIdFromToken(authToken);
+        if (!userId) throw new Error("Invalid user token");
+
+        const payload = {
+          user_id: Number(userId),
+          product_id: Number(product.id),
+          interaction_type: "click",
+          rating: 0,
+          timestamp: new Date().toISOString(),
+        };
+
+        const response = await axios.post(
+          INTERACTION_API_URL,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Interaction recorded:", response.data);
+      } catch (error) {
+        console.error("Error recording interaction:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        setError("Failed to record interaction. Please try again.");
+        setTimeout(() => setError(null), 3000);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300),
+    [authToken, product?.id, getUserIdFromToken]
+  );
+
+  const handleProductNameClick = (e) => {
+    e.stopPropagation();
+    debouncedHandleCardClick(e); // Record interaction
+    navigate(`/product/${product?.id}`);
+  };
+
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-5 w-full flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-2xl">
-      {/* Product Image & Like Button */}
+    <motion.div
+      className={`bg-white shadow-lg rounded-2xl p-5 w-full flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-2xl ${
+        isLoading ? "opacity-75" : ""
+      }`}
+      onClick={debouncedHandleCardClick}
+      whileHover={{ scale: 1.05 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
       <div className="relative">
         <img
           src={productImage}
@@ -197,50 +265,62 @@ const ProductCard = ({ product }) => {
           className="w-full h-52 object-contain rounded-lg"
           onError={(e) => (e.target.src = "/placeholder.jpg")}
         />
-
-        {/* Like Button */}
         <motion.button
           whileTap={{ scale: 0.8 }}
           whileHover={{ scale: 1.2 }}
           transition={{ type: "spring", stiffness: 300 }}
           className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 
             ${liked ? "text-red-500 scale-110" : "text-gray-400 hover:text-red-500"}`}
-          onClick={handleLike}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLike();
+          }}
         >
           <FaHeart size={22} />
         </motion.button>
       </div>
 
-      {/* Product Info */}
       <h3
         className="text-lg font-semibold mt-3 text-gray-900 truncate cursor-pointer hover:text-blue-500 transition duration-300"
-        onClick={() => navigate(`/product/${product?.id}`)}
+        onClick={handleProductNameClick}
       >
         {productName}
       </h3>
 
-      <p className="text-gray-500 text-sm">Brand: <span className="font-medium">{productBrand}</span></p>
+      <p className="text-gray-500 text-sm">
+        Brand: <span className="font-medium">{productBrand}</span>
+      </p>
+
       <p className="text-gray-600 text-md font-medium">₹ {productPrice.toFixed(2)}</p>
 
-      {/* Ratings */}
       <div className="flex items-center mt-2">
         <FaStar className="text-yellow-500" />
         <span className="text-gray-700 text-sm ml-1">{product?.ratings || "No Rating"} / 5</span>
       </div>
 
-      {/* "Add to Cart" Button */}
+      {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.9 }}
         transition={{ type: "spring", stiffness: 200 }}
         className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg shadow-md transition-all duration-300
-          ${isInCart ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 hover:shadow-lg text-gray-900 font-semibold"}`}
-        onClick={handleAddToCart}
-        disabled={isInCart}
+          ${
+            isInCart
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 hover:shadow-lg text-gray-900 font-semibold"
+          }
+          ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleAddToCart();
+        }}
+        disabled={isInCart || isLoading}
       >
-        <FaShoppingCart size={18} /> {isInCart ? "Added to Cart" : "Add to Cart"}
+        <FaShoppingCart size={18} />
+        {isLoading ? "Processing..." : isInCart ? "Added to Cart" : "Add to Cart"}
       </motion.button>
-    </div>
+    </motion.div>
   );
 };
 

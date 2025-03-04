@@ -1,9 +1,10 @@
-import React, { useEffect, useState, Component } from "react";
+import React, { useEffect, useState, Component, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import debounce from "lodash/debounce";
 import CountdownTimer from "../components/countDown.jsx";
 import AdvertisementCarousel from "../components/advertisementCarousel.jsx";
 import Loader from "../components/loader.jsx"; // Adjust path based on your project structure
@@ -63,6 +64,8 @@ function HomePage() {
   const [loadingRecommendations, setLoadingRecommendations] = useState(true);
   const [errorRecommendations, setErrorRecommendations] = useState(null);
 
+  const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
+
   const featuredProducts = [
     {
       id: 1,
@@ -89,6 +92,8 @@ function HomePage() {
       image: "/products/samsung-watch.jpg",
     },
   ];
+
+  
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -129,6 +134,53 @@ function HomePage() {
 
     fetchRecommendations();
   }, [authToken]);
+
+  const debouncedHandleCardClick = useCallback(
+    debounce(async (productId) => {
+      if (!authToken || !productId) {
+        console.error("Missing authentication or product ID");
+        return;
+      }
+
+      try {
+        const userId = jwtDecode(authToken).user_id || jwtDecode(authToken).id;
+        if (!userId) throw new Error("Invalid user token");
+
+        const payload = {
+          user_id: Number(userId),
+          product_id: Number(productId),
+          interaction_type: "click",
+          rating: 0,
+          timestamp: new Date().toISOString(),
+        };
+
+        const response = await axios.post(
+          INTERACTION_API_URL,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Interaction recorded:", response.data);
+      } catch (error) {
+        console.error("Error recording interaction:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+      }
+    }, 300),
+    [authToken]
+  );
+
+  const handleRecommendedProductClick = (productId) => {
+    debouncedHandleCardClick(productId); // Record interaction
+    navigate(`/product/${productId}`); // Navigate to product page
+  };
 
   return (
     <ErrorBoundary>
@@ -202,8 +254,7 @@ function HomePage() {
           </div>
         </div>
 
-
-             {/* Suggested for You Section - Only visible if recommendations are available */}
+        {/* Suggested for You Section - Only visible if recommendations are available */}
         {!loadingRecommendations && !errorRecommendations && recommendedProducts.length > 0 && (
           <div className="max-w-7xl mx-auto py-12 px-6">
             <h2 className="text-3xl font-bold text-gray-900 text-center mb-6">Suggested for You</h2>
@@ -218,7 +269,7 @@ function HomePage() {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                     className="snap-start flex-shrink-0 w-72 bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer"
-                    onClick={() => navigate(`/product/${product.id}`)}
+                    onClick={() => handleRecommendedProductClick(product.id)}
                   >
                     <img
                       src={product.main_image || "/default.jpg"}
@@ -242,7 +293,6 @@ function HomePage() {
           </div>
         )}
 
-
         {/* Featured Products Section */}
         <div className="max-w-7xl mx-auto py-12 px-6">
           <h2 className="text-3xl font-bold text-gray-900 text-center">Featured Products</h2>
@@ -260,8 +310,6 @@ function HomePage() {
             ))}
           </div>
         </div>
-
-       
       </div>
     </ErrorBoundary>
   );

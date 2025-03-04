@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import { useSelector } from "react-redux";
+import {loadStripe} from '@stripe/stripe-js'
 
 const CartSidebar = ({ closeSidebar }) => {
   const [cartProducts, setCartProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const authToken = useSelector((state) => state.auth.access_token);
+  console.log("Fetched Auth Token:", authToken);
   const cartId = sessionStorage.getItem("cart_id");
+  const stripePromise = loadStripe('pk_test_51QwgmpSC0yoSUpha40niA9BO3Q6XnB6CSUDaaifwURXXszTKvfTBEu1SLsD2D1mdaJt5z72nX7tSpOBN5XAddPWh00mAOwPdsb');
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -91,30 +95,73 @@ const CartSidebar = ({ closeSidebar }) => {
   // ✅ Function to handle checkout
   const handleCheckout = async () => {
     if (!authToken || cartProducts.length === 0) return;
-
+  
+    let userId, email;
+  
+    try {
+      console.log("Raw authToken:", authToken);
+      const decoded = jwtDecode(authToken);
+      console.log("Decoded Token:", decoded);
+      userId = decoded.user_id; // Extract user ID from token
+      email = decoded.email || "customer@example.com"; // Fallback email
+  
+      if (!userId) {
+        console.log("No user_id found in token!");
+        alert("Token missing user ID. Please log in again.");
+        return;
+      }
+    } catch (decodeError) {
+      alert("Invalid token. Please log in again.");
+      console.error("Token decode error:", decodeError);
+      return;
+    }
+  
     const orderData = {
       totalAmount: totalPrice,
-      products: cartProducts.map((item) => ({
+      userId,
+      email,
+      items: cartProducts.map((item) => ({
         name: item.name,
         quantity: item.quantity,
+        price: item.price,
       })),
     };
-
+  
     try {
-      const response = await axios.post("http://localhost:5009/create-checkout-session", orderData, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-
-      alert("Order placed successfully!");
+      console.log("Order Data with userId and email:", orderData);
+      const response = await axios.post(
+        "http://localhost:5009/api/payment/create-checkout-session",
+        orderData,
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      );
+  
       console.log("Checkout Response:", response.data);
-
-      // Optionally, clear the cart after checkout
-      setCartProducts([]);
+  
+      // Use Stripe to redirect to checkout
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error("Stripe failed to load");
+      }
+  
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: response.data.id,
+      });
+  
+      if (stripeError) {
+        throw new Error(stripeError.message);
+      }
     } catch (error) {
       console.error("Checkout failed:", error);
-      alert("Failed to place order. Try again!");
+      if (error.response) {
+        alert(`Checkout failed: ${error.response.status} - ${error.response.data.message}`);
+      } else if (error.request) {
+        alert("Network error: Could not reach payment server.");
+      } else {
+        alert(`Unexpected error during checkout: ${error.message}`);
+      }
     }
   };
+  
 
   return (
     <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl z-50 p-5 overflow-y-auto">

@@ -10,41 +10,46 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
       const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
-
-        // Dispatch tokens & role to Redux
-        dispatch(login({ 
-          access: data.access, 
-          refresh: data.refresh, 
-          role: data.role 
-        }));
-
+  
+        // Get token expiration time (60 minutes from now)
+        const expirationTime = new Date().getTime() + 60 * 60 * 1000;
+  
+        // Store tokens & expiration time
+        localStorage.setItem("access", data.access);
+        localStorage.setItem("refresh", data.refresh);
+        localStorage.setItem("token_expiration", expirationTime);
+  
+        // Dispatch to Redux
+        dispatch(login({ access: data.access, refresh: data.refresh, role: data.role }));
+  
         message.success("Login successful! Redirecting...");
         setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
-        message.error(errorData.message || "Login failed. Please try again.");
+        message.error(errorData.message || "Login failed.");
       }
     } catch (error) {
-      message.error("Something went wrong. Please try again.");
+      message.error("Something went wrong.");
       console.error("Error logging in:", error);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-[#0a192f] flex flex-col justify-center py-12 sm:px-6 lg:px-8">

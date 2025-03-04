@@ -17,7 +17,27 @@ function Navbar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
-  // Fetch notifications when component mounts
+  // Store login time when user logs in
+  useEffect(() => {
+    if (authToken) {
+      localStorage.setItem("login_time", Date.now());
+    }
+  }, [authToken]);
+
+  // Auto logout after 60 minutes
+  useEffect(() => {
+    const checkTimeout = () => {
+      const loginTime = localStorage.getItem("login_time");
+      if (loginTime && Date.now() - loginTime > 60 * 60 * 1000) {
+        handleLogout();
+      }
+    };
+
+    const interval = setInterval(checkTimeout, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch notifications
   useEffect(() => {
     if (authToken) {
       axios
@@ -33,7 +53,7 @@ function Navbar() {
     }
   }, [authToken]);
 
-  // Mark notification as read/unread
+  // Mark notification as read
   const markAsRead = async (notifId) => {
     try {
       const response = await axios.put(
@@ -57,6 +77,7 @@ function Navbar() {
   const handleLogout = () => {
     dispatch(logout());
     sessionStorage.removeItem("refresh_token");
+    localStorage.removeItem("login_time"); // Remove login time
     navigate("/");
   };
 
@@ -82,7 +103,6 @@ function Navbar() {
               <Link to="/admin" className={location.pathname === "/admin" ? "text-yellow-500" : ""}>Admin</Link>
             )}
 
-            {/* Vendor Links */}
             {authToken && user_role === "vendor" && (
               <>
                 <Link to="/vendor/product-form" className={location.pathname === "/product-form" ? "text-yellow-500" : ""}>
@@ -115,7 +135,6 @@ function Navbar() {
                   )}
                 </button>
 
-                {/* Dropdown Content */}
                 {notifOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg rounded-lg overflow-hidden">
                     {notifications.length > 0 ? (
@@ -178,27 +197,6 @@ function Navbar() {
             {menuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <div className="md:hidden bg-[#0a192f] text-white text-center p-4">
-            <Link to="/" className="block py-2" onClick={() => setMenuOpen(false)}>Home</Link>
-            <Link to="/shop" className="block py-2" onClick={() => setMenuOpen(false)}>Shop</Link>
-            <Link to="/about" className="block py-2" onClick={() => setMenuOpen(false)}>About</Link>
-            <Link to="/contact" className="block py-2" onClick={() => setMenuOpen(false)}>Contact</Link>
-
-            {authToken && user_role === "admin" && (
-              <Link to="/admin" className="block py-2" onClick={() => setMenuOpen(false)}>Admin</Link>
-            )}
-
-            {authToken && user_role === "vendor" && (
-              <>
-                <Link to="/vendor/product-form" className="block py-2" onClick={() => setMenuOpen(false)}>Product Form</Link>
-                <Link to="/vendor/store-form" className="block py-2" onClick={() => setMenuOpen(false)}>Vendor Form</Link>
-              </>
-            )}
-          </div>
-        )}
       </div>
     </nav>
   );

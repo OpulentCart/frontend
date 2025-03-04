@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaHeart, FaShoppingCart, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
+import debounce from "lodash/debounce";
 import Loader from "../../src/components/loader"; // Adjust path as needed
 
 const ProductDetails = () => {
@@ -23,6 +24,8 @@ const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+
+  const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -96,7 +99,7 @@ const ProductDetails = () => {
                 main_image: item.main_image || "/default.jpg",
                 hybrid_score: item.hybrid_score,
               }))
-          : [];
+            : [];
           setRecommendedProducts(recommendedData);
         } catch (err) {
           console.error("Hybrid Recommendations Error:", err.response ? err.response.data : err.message);
@@ -128,9 +131,55 @@ const ProductDetails = () => {
     setIsHovered(false);
     setZoomPosition({ x: 0, y: 0 });
   };
+
+  const debouncedHandleCardClick = useCallback(
+    debounce(async (productId) => {
+      if (!authToken || !productId) {
+        console.error("Missing authentication or product ID");
+        return;
+      }
+
+      try {
+        const userId = jwtDecode(authToken).user_id || jwtDecode(authToken).id;
+        if (!userId) throw new Error("Invalid user token");
+
+        const payload = {
+          user_id: Number(userId),
+          product_id: Number(productId),
+          interaction_type: "click",
+          rating: 0,
+          timestamp: new Date().toISOString(),
+        };
+
+        const response = await axios.post(
+          INTERACTION_API_URL,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Interaction recorded:", response.data);
+      } catch (error) {
+        console.error("Error recording interaction:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        setError("Failed to record interaction. Please try again.");
+        setTimeout(() => setError(null), 3000);
+      }
+    }, 300),
+    [authToken]
+  );
+
   const handleRelatedProductClick = (productId) => {
     setLoading(true);
-    navigate(`/product/${productId}`);
+    debouncedHandleCardClick(productId); // Record interaction
+    navigate(`/product/${productId}`); // Navigate to product page
   };
 
   if (loading) return <Loader />;
