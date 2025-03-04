@@ -107,6 +107,12 @@ const VendorDashboard = () => {
         >
           Manage Products
         </button>
+        <button
+          className="bg-yellow-500 text-white px-6 py-2 rounded shadow-md hover:bg-yellow-600"  
+           onClick={() => navigate("/vendor/orders")}
+        >
+          Manage Orders
+        </button>
       </div>
 
       {/* Dashboard Cards */}

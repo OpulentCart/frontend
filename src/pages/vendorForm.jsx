@@ -4,11 +4,10 @@ import "react-phone-input-2/lib/style.css";
 import { jwtDecode } from "jwt-decode";
 import { useSelector } from "react-redux";
 
-
 const VendorStoreForm = () => {
   const [categories, setCategories] = useState([]); 
   const [step, setStep] = useState(1);
-  const steps = ["Business Details", "Store Details", "Upload Documents"];
+  const steps = ["Business Details", "Store Details"];
   const [formData, setFormData] = useState({
     businessEmail: "",
     businessPhone: "",
@@ -26,35 +25,30 @@ const VendorStoreForm = () => {
 
   const authToken = useSelector((state) => state.auth.access_token);
 
-
- // const categories = ["Electronics", "Fashion", "Groceries", "Health", "Home & Living"];
-
- useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("http://localhost:5004/categories/");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      
-      const data = await response.json();
-      
-      // Extract categories array from the response
-      if (Array.isArray(data.categories)) {
-        setCategories(data.categories);
-      } else {
-        console.error("Expected an array but received:", data);
-        setCategories([]); // Fallback to empty array
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("http://localhost:5004/categories/");
+        if (!response.ok) throw new Error("Failed to fetch categories");
+        
+        const data = await response.json();
+        
+        // Extract categories array from the response
+        if (Array.isArray(data.categories)) {
+          setCategories(data.categories);
+        } else {
+          console.error("Expected an array but received:", data);
+          setCategories([]); // Fallback to empty array
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]); // Ensure categories is always an array
       }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setCategories([]); // Ensure categories is always an array
-    }
-  };
+    };
 
-  fetchCategories();
-}, []);
+    fetchCategories();
+  }, []);
 
-
-  
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData((prevState) => ({
@@ -84,15 +78,10 @@ const VendorStoreForm = () => {
         formData.state.trim() !== "" &&
         formData.zipcode.trim() !== ""
       );
-    } else if (step === 3) {
-      return formData.businessDocument && formData.certificate;
     }
     return true;
   };
   
-  
-  
-
   const handleNext = (e) => {
     e.preventDefault(); // Fix: Add event parameter
   
@@ -117,22 +106,11 @@ const VendorStoreForm = () => {
           return;
         }
       }
-    } else if (step === 3) {
-      if (!formData.storeLogo) {
-        alert("Please upload a store logo.");
-        return;
-      }
-      if (formData.galleryImages.length === 0) {
-        alert("Please upload at least one gallery image.");
-        return;
-      }
     }
   
     setStep((prev) => prev + 1);
   };
   
-  
-
   const handleBack = () => setStep((prev) => prev - 1);
 
   const handleSubmit = async (e) => {
@@ -154,27 +132,18 @@ const VendorStoreForm = () => {
   
     // Create FormData to send files properly
     const formDataToSend = new FormData();
-     formDataToSend.append("business_email", formData.businessEmail);
-  formDataToSend.append("business_phone", formData.businessPhone);
-  formDataToSend.append("store_name", formData.storeName);
-  formDataToSend.append("category_id", formData.category); // Backend expects category_id
-  formDataToSend.append("street_address", formData.address); // Rename `address` to `street_address`
-  formDataToSend.append("city", formData.city);
-  formDataToSend.append("state", formData.state);
-  formDataToSend.append("country", formData.country);
-  formDataToSend.append("pincode", formData.zipcode); // Rename `zipcode` to `pincode`
-  formDataToSend.append("store_description", formData.store_description);
-  formDataToSend.append("user_id", user_id);
+    formDataToSend.append("business_email", formData.businessEmail);
+    formDataToSend.append("business_phone", formData.businessPhone);
+    formDataToSend.append("store_name", formData.storeName);
+    formDataToSend.append("category_id", formData.category); // Backend expects category_id
+    formDataToSend.append("street_address", formData.address); // Rename `address` to `street_address`
+    formDataToSend.append("city", formData.city);
+    formDataToSend.append("state", formData.state);
+    formDataToSend.append("country", formData.country);
+    formDataToSend.append("pincode", formData.zipcode); // Rename `zipcode` to `pincode`
+    formDataToSend.append("store_description", formData.store_description);
+    formDataToSend.append("user_id", user_id);
 
-  
-    // Append files (check if files are selected before appending)
-    if (formData.businessDocument) {
-      formDataToSend.append("businessDocument", formData.businessDocument);
-    }
-    if (formData.certificate) {
-      formDataToSend.append("certificate", formData.certificate);
-    }
-  
     try {
       const response = await fetch("http://localhost:5002/vendors/create_store/", {
         method: "POST",
@@ -195,21 +164,16 @@ const VendorStoreForm = () => {
     }
   };
   
-  
-  
-
   return (
     <div className="mt-10 min-h-screen p-6 bg-gray-100 flex items-center justify-center">
       <div className="container max-w-screen-lg mx-auto">
         <h2 className="font-semibold text-xl text-yellow-500">
-          {step === 1 ? "Business Details" : step === 2 ? "Store Details" : "Upload Documents"}
+          {step === 1 ? "Business Details" : "Store Details"}
         </h2>
         <p className="text-gray-500 mb-6">
           {step === 1
             ? "Provide your business details."
-            : step === 2
-            ? "Fill out your store details."
-            : "Upload required documents for verification."}
+            : "Fill out your store details."}
         </p>
         <div className="flex items-center justify-between mb-6">
           {steps.map((label, index) => (
@@ -226,7 +190,7 @@ const VendorStoreForm = () => {
           ))}
         </div>
 
-        <form onSubmit={step === 3 ? handleSubmit : (e) => e.preventDefault()} className="bg-white rounded shadow-lg p-6 md:p-8 mb-6">
+        <form onSubmit={step === 2 ? handleSubmit : (e) => e.preventDefault()} className="bg-white rounded shadow-lg p-6 md:p-8 mb-6">
           {/* Step 1: Business Details */}
           {step === 1 && (
             <>
@@ -336,27 +300,6 @@ const VendorStoreForm = () => {
             </>
           )}
 
-          {/* Step 3: Upload Documents */}
-          {step === 3 && (
-            <>
-              <div className="md:col-span-5">
-                <label htmlFor="businessDocument">Upload Business Document</label>
-                <input
-                  type="file"
-                  id="businessDocument"
-                  name="businessDocument"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleChange} // ✅ Single file only
-                  className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                />
-              </div>
-              <div className="md:col-span-5">
-                <label htmlFor="certificate">Upload Business Certificate</label>
-                <input type="file" id="certificate" name="certificate" accept=".pdf,.doc,.docx" onChange={handleChange} className="h-10 border mt-1 rounded px-4 w-full bg-gray-50" />
-              </div>
-            </>
-          )}
-
 <div className="flex justify-between mt-6">
             {step > 1 && (
               <button
@@ -367,7 +310,7 @@ const VendorStoreForm = () => {
                 Back
               </button>
             )}
-            {step < 3 ? (
+            {step < 2 ? (
               <button
                 type="button"
                 onClick={(e) => handleNext(e)} 
