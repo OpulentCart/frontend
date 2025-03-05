@@ -19,8 +19,9 @@ const VendorProducts = () => {
       });
 
       if (res.data.products) {
-        setProducts([res.data.products]); // Convert object to array
+        setProducts(res.data.products); // Correct: Directly setting the array of products
       }
+      
     } catch (error) {
       console.error("Error fetching vendor products:", error);
     }
