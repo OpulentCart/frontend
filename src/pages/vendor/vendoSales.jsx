@@ -1,17 +1,8 @@
-import React from "react";
-import { Bar, Pie, Line, Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  PointElement,
-  LineElement,
-} from "chart.js";
+import React, { useState, useEffect } from "react";
+import { Bar, Line, Doughnut, Radar } from "react-chartjs-2";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement, ArcElement, RadialLinearScale } from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -20,105 +11,153 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement,
+  LineElement,
   PointElement,
-  LineElement
+  ArcElement,
+  RadialLinearScale // Required for Radar chart
 );
 
 const VendorDashboard = () => {
-  // Dummy Data
-  const salesData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    datasets: [
-      {
-        label: "Sales (in $)",
-        data: [5000, 7000, 8000, 12000, 15000, 18000],
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-        borderColor: "rgba(75, 192, 192, 1)",
-        borderWidth: 1,
-      },
-    ],
-  };
+  const authToken = useSelector((state) => state.auth.access_token);
 
-  const profitData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    datasets: [
-      {
-        label: "Profit (in $)",
-        data: [2000, 3000, 4000, 6000, 8000, 10000],
-        backgroundColor: "rgba(54, 162, 235, 0.6)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
-      },
-    ],
-  };
+  const [salesData, setSalesData] = useState(null);
+  const [profitData, setProfitData] = useState(null);
+  const [quantityData, setQuantityData] = useState(null);
+  const [topCustomersData, setTopCustomersData] = useState(null);
+  const [loading, setLoading] = useState(true); // State for loading
 
-  const ordersData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    datasets: [
-      {
-        label: "Orders",
-        data: [150, 180, 250, 300, 350, 400],
-        backgroundColor: "rgba(255, 99, 132, 0.6)",
-        borderColor: "rgba(255, 99, 132, 1)",
-        borderWidth: 1,
-      },
-    ],
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get("http://localhost:5002/vendors/sales/dashboard/", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
 
-  const paymentModeData = {
-    labels: ["Credit Card", "PayPal", "Cash", "UPI"],
-    datasets: [
-      {
-        label: "Payment Modes",
-        data: [45, 25, 20, 10],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-        ],
-      },
-    ],
-  };
+        const salesOverview = res.data.vendorSalesOverview[0]; // Assuming there's only one vendor in the response
+        const monthlyProfit = res.data.monthlyProfit;
+        const quantityByCategory = res.data.quantityByCategory;
+        const topCustomers = res.data.topCustomers;
+
+        // Prepare Sales Data (replace $ with ₹)
+        setSalesData({
+          labels: [salesOverview.store_name],
+          datasets: [
+            {
+              label: "Total Sales (in ₹)", // Changed label
+              data: [salesOverview.total_sales],
+              backgroundColor: "rgba(75, 192, 192, 0.6)",
+              borderColor: "rgba(75, 192, 192, 1)",
+              borderWidth: 1,
+            },
+          ],
+        });
+
+        // Prepare Profit Data (Line Chart, replace $ with ₹)
+        setProfitData({
+          labels: monthlyProfit.map(item => item.month.trim()),
+          datasets: [
+            {
+              label: "Profit (in ₹)", // Changed label
+              data: monthlyProfit.map(item => item.profit),
+              backgroundColor: "rgba(54, 162, 235, 0.6)",
+              borderColor: "rgba(54, 162, 235, 1)",
+              borderWidth: 1,
+              fill: false,
+            },
+          ],
+        });
+
+        // Prepare Quantity Data (Radar Chart)
+        setQuantityData({
+          labels: quantityByCategory.map(item => item.name),
+          datasets: [
+            {
+              label: "Quantity by Category",
+              data: quantityByCategory.map(item => item.total_quantity),
+              backgroundColor: "rgba(255, 159, 64, 0.6)",
+              borderColor: "rgba(255, 159, 64, 1)",
+              borderWidth: 1,
+              fill: true,
+            },
+          ],
+        });
+
+        // Prepare Top Customers Data (Doughnut Chart)
+        setTopCustomersData({
+          labels: topCustomers.map(item => item.name),
+          datasets: [
+            {
+              label: "Top Customers",
+              data: topCustomers.map(item => item.sum_of_amount),
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.6)",
+                "rgba(54, 162, 235, 0.6)",
+                "rgba(255, 206, 86, 0.6)",
+                "rgba(75, 192, 192, 0.6)",
+              ],
+            },
+          ],
+        });
+
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false); // Stop loading after the data is fetched
+      }
+    };
+
+    fetchData();
+  }, [authToken]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+        <div className="w-16 h-16 border-t-4 border-b-4 border-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-6">Vendor Sales Dashboard</h1>
+    <div className="p-6 bg-gray-100 min-h-screen mt-15 mb-10">
+      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Vendor Sales Dashboard</h1>
+      <p className="text-center text-lg mb-6 text-gray-700">This is your sales overview page showing key insights such as total sales, profits, top customers, and more.</p>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {/* Sales Chart */}
-        <div className="bg-white p-4 shadow-lg rounded-xl">
+        {/* Sales Overview (Bar Chart) */}
+        <div className="bg-white p-4 shadow-lg rounded-xl w-full h-72 flex items-center justify-center">
           <h2 className="text-xl font-semibold mb-2">Sales Overview</h2>
           <Bar data={salesData} options={{ responsive: true, plugins: { tooltip: { enabled: true } } }} />
         </div>
 
-        {/* Profit Chart */}
-        <div className="bg-white p-4 shadow-lg rounded-xl">
+        {/* Profit Trend (Line Chart) */}
+        <div className="bg-white p-4 shadow-lg rounded-xl w-full h-72 flex items-center justify-center">
           <h2 className="text-xl font-semibold mb-2">Profit Trend</h2>
           <Line data={profitData} options={{ responsive: true, plugins: { tooltip: { enabled: true } } }} />
         </div>
+      </div>
 
-        {/* Orders Chart */}
-        <div className="bg-white p-4 shadow-lg rounded-xl">
-          <h2 className="text-xl font-semibold mb-2">Total Orders</h2>
-          <Bar data={ordersData} options={{ responsive: true, plugins: { tooltip: { enabled: true } } }} />
+      {/* Quantity by Category (Radar Chart) and Top Customers (Doughnut Chart) on the same row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-6">
+        {/* Quantity by Category (Radar Chart) */}
+        <div className="bg-white p-4 shadow-lg rounded-xl w-full h-72 flex items-center justify-center">
+          <h2 className="text-xl font-semibold mb-2">Quantity by Category</h2>
+          <Radar data={quantityData} options={{ responsive: true, plugins: { tooltip: { enabled: true } } }} />
         </div>
 
-        {/* Payment Modes Chart */}
-        <div className="bg-white p-4 shadow-lg rounded-xl">
-          <h2 className="text-xl font-semibold mb-2">Payment Mode Distribution</h2>
-          <Doughnut data={paymentModeData} options={{ responsive: true, plugins: { tooltip: { enabled: true } } }} />
+        {/* Top Customers (Doughnut Chart) */}
+        <div className="bg-white p-4 shadow-lg rounded-xl w-full h-72 flex items-center justify-center">
+          <h2 className="text-xl font-semibold mb-2">Top Customers</h2>
+          <Doughnut data={topCustomersData} options={{ responsive: true, plugins: { tooltip: { enabled: true } } }} />
         </div>
       </div>
 
       {/* Date Filter (Placeholder) */}
-      <div className="mt-6 text-center">
-        <button className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600">
+      {/* <div className="mt-6 text-center">
+        <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-yellow-600">
           Filter by Date
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

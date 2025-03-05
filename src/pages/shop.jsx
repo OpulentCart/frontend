@@ -86,12 +86,12 @@ const Shop = () => {
       if (!cartId && authToken) {
         try {
           const response = await axios.post(
-            "http://localhost:5007/carts", 
-            { user_id: authToken },
+            "http://localhost:5007/carts",
+            {}, // No need to pass user_id as authToken
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
   
-          if (response.data.success) {
+          if (response.data.success && response.data.cart_id) {
             cartId = response.data.cart_id;
             sessionStorage.setItem("cart_id", cartId);
           }
@@ -99,14 +99,13 @@ const Shop = () => {
           console.error("Error creating cart:", error.response?.data || error.message);
         }
       }
-  
-      if (cartId) {
-        sessionStorage.setItem("cart_id", cartId);
-      }
     };
   
-    fetchCartId();
+    if (authToken) {
+      fetchCartId();
+    }
   }, [authToken]);
+  
 
   // Fetch cart items
   useEffect(() => {
@@ -120,24 +119,20 @@ const Shop = () => {
         });
   
         const cartItemsData = cartResponse.data.cartItems || [];
-        const productRequests = cartItemsData.map((item) =>
-          axios.get(`http://127.0.0.1:8001/related-products/${item.product_id}/`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-          })
-        );
-  
-        const productResponses = await Promise.all(productRequests);
-        const products = productResponses.map((res) => res.data);
-  
-        setCartItems(products);
+        
+        setCartItems(cartItemsData);
         setCartProductIds(new Set(cartItemsData.map((item) => item.product_id)));
+  
       } catch (error) {
         console.error("Error fetching cart items:", error);
       }
     };
   
-    fetchCartItems();
+    if (authToken) {
+      fetchCartItems();
+    }
   }, [authToken]);
+  
 
   // Filter products based on category and subcategory IDs
   const filterProducts = ({ categoryId, subcategoryId }) => {
@@ -160,39 +155,37 @@ const Shop = () => {
 
   // Add product to cart and open cart sidebar
   const handleAddToCart = async (productId) => {
+    const cartId = sessionStorage.getItem("cart_id");
+    
     if (!authToken || !cartId) {
       console.error("No auth token or cart ID available");
       return;
     }
-
+  
     try {
       const response = await axios.post(
         `http://localhost:5007/cart-items/add`,
         { cart_id: cartId, product_id: productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-
-      const updatedCartItems = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-
-      const cartItemsData = updatedCartItems.data.cartItems || [];
-      const productRequests = cartItemsData.map((item) =>
-        axios.get(`http://127.0.0.1:8001/related-products/${item.product_id}/`, {
+  
+      if (response.data.success) {
+        // Fetch updated cart items only after successful addition
+        const updatedCartItemsResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
-        })
-      );
-
-      const productResponses = await Promise.all(productRequests);
-      const products = productResponses.map((res) => res.data);
-
-      setCartItems(products);
-      setCartProductIds(new Set(cartItemsData.map((item) => item.product_id)));
-      setIsCartOpen(true);
+        });
+  
+        const cartItemsData = updatedCartItemsResponse.data.cartItems || [];
+        setCartItems(cartItemsData);
+        setCartProductIds(new Set(cartItemsData.map((item) => item.product_id)));
+  
+        setIsCartOpen(true); // Open cart sidebar
+      }
     } catch (error) {
       console.error("Error adding to cart:", error);
     }
   };
+  
 
   // Prepare sidebar categories structure
   const sidebarCategories = categories.map((cat) => ({

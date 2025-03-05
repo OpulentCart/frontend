@@ -1,12 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
-import storage from "redux-persist/lib/storage"; // Use localStorage
 import { persistStore, persistReducer } from "redux-persist";
-import notificationReducer from "./slices/notificationSlice"; // Ensure this exists
+import storageSession from "redux-persist/lib/storage/session"; // Use sessionStorage
 
 const persistConfig = {
   key: "auth",
-  storage,
+  storage: storageSession, // Persist in sessionStorage
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
@@ -14,7 +13,6 @@ const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
-    notifications: notificationReducer,
   },
 });
 

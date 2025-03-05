@@ -117,39 +117,42 @@ const OrderPage = () => {
                 <p className="text-xl font-bold text-green-600">Total: ₹{order.total_amount}</p>
               </div>
 
-              {/* Order Tracking */}
-              <div className="mt-4 relative">
-                <h3 className="text-lg font-semibold text-gray-700">Order Tracking</h3>
 
-                {/* Transparent Line */}
-                <div className="absolute top-1/2 left-0 w-full h-[3px] bg-gray-300/50 transform -translate-y-1/2">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500"
-                    style={{
-                      width: `${(getStatusStep(order.status) / 2) * 100}%`,
-                    }}
-                  />
-                </div>
+             {/* Order Tracking */}
+<div className="mt-4 relative">
+  <h3 className="text-lg font-semibold text-gray-700">Order Tracking</h3>
 
-                {/* Status Steps */}
-                <div className="flex justify-between items-center mt-6 relative">
-                  {["Pending", "Shipped", "Delivered"].map((step, index) => (
-                    <div key={step} className="relative flex flex-col items-center w-1/3">
-                      {/* Status Circle */}
-                      <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 ${
-                          index <= getStatusStep(order.status)
-                            ? "bg-blue-600 border-blue-600 shadow-md"
-                            : "bg-gray-300 border-gray-300"
-                        }`}
-                      />
+  {/* Progress Line */}
+  <div className="relative flex justify-between items-center mt-4">
+    {/* Transparent Background Line */}
+    <div className="absolute top-1/2 left-0 w-full h-[3px] bg-gray-300 transform -translate-y-1/2 z-0"></div>
+    
+    {/* Progress Line */}
+    <div
+      className="absolute top-1/2 left-0 h-[3px] bg-blue-500 transition-all duration-500 z-10"
+      style={{
+        width: `${(getStatusStep(order.status) / 2) * 100}%`,
+      }}
+    ></div>
 
-                      {/* Status Label */}
-                      <p className="text-xs mt-2 text-gray-700">{step}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+    {/* Status Steps */}
+    {["Pending", "Shipped", "Delivered"].map((step, index) => (
+      <div key={step} className="relative flex flex-col items-center w-1/3">
+        {/* Status Circle */}
+        <div
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center z-20
+            ${index <= getStatusStep(order.status)
+              ? "bg-blue-600 border-blue-600 text-white"
+              : "bg-gray-300 border-gray-300"}
+          `}
+        />
+        {/* Status Label */}
+        <p className="text-xs mt-2 text-gray-700">{step}</p>
+      </div>
+    ))}
+  </div>
+</div>
+
 
               {/* Expand Button */}
               <button
