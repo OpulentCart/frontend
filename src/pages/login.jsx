@@ -27,7 +27,7 @@ function LoginPage() {
         const data = await response.json();
   
         // Get token expiration time (60 minutes from now)
-        const expirationTime = new Date().getTime() + 60 * 60 * 1000;
+        const expirationTime = new Date().getTime() + 60 *60 *1000;
   
         // Store tokens & expiration time
         localStorage.setItem("access", data.access);
@@ -150,7 +150,7 @@ function LoginPage() {
             </div>
           </form>
 
-          {/* Divider */}
+          {/* {/ Divider /} */}
           <div className="mt-6 relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-600"></div>
@@ -160,7 +160,7 @@ function LoginPage() {
             </div>
           </div>
 
-          {/* Social Media Login */}
+          {/* {/ Social Media Login /} */}
           <div className="mt-6 grid grid-cols-3 gap-3">
             <a
               href="#"
