@@ -117,6 +117,12 @@ const VendorDashboard = () => {
         >
           Manage Orders
         </button>
+        <button
+          className="bg-purple-500 text-white px-6 py-2 rounded shadow-md hover:bg-purple-600"
+          onClick={() => navigate("/vendor/sales")} 
+        > 
+          View Sales    
+        </button>
       </div>
 
       {/* Dashboard Cards */}
@@ -140,7 +146,7 @@ const VendorDashboard = () => {
         <DashboardCard title="Pending Products" value={pendingProducts} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
 
         {/* Total Sales */}
-        <DashboardCard title="Total Sales" value={`$${sales}`} color="text-blue-600" border="border-blue-300" icon={<DollarSign size={28} className="text-blue-600" />} colSpan="col-span-3" />
+        {/* <DashboardCard title="Total Sales" value={`$${sales}`} color="text-blue-600" border="border-blue-300" icon={<DollarSign size={28} className="text-blue-600" />} colSpan="col-span-3" /> */}
       </div>
     </div>
   );
