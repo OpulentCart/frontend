@@ -10,15 +10,13 @@ const VendorDashboard = () => {
   const [vendorId, setVendorId] = useState(null);
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
-  const [sales, setSales] = useState(0);
-  const [pendingStores, setPendingStores] = useState(0);
-  const [approvedStores, setApprovedStores] = useState(0);
-  const [pendingProducts, setPendingProducts] = useState(0);
-  const [approvedProducts, setApprovedProducts] = useState(0);
+  const [dashboardData, setDashboardData] = useState({});
   const navigate = useNavigate();
 
+
+
   useEffect(() => {
-    fetchVendorDetails();
+    fetchDashboardData(); // Fetch dashboard summary data
   }, []);
 
   useEffect(() => {
@@ -26,22 +24,23 @@ const VendorDashboard = () => {
       fetchVendorStores();
       fetchVendorProducts();
       fetchVendorSales();
+      fetchDashboardData(); // Fetch dashboard summary data
     }
   }, [vendorId]);
 
-  const fetchVendorDetails = async () => {
-    try {
-      const res = await axios.get("http://localhost:5002/vendors/", {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+  // const fetchVendorDetails = async () => {
+  //   try {
+  //     const res = await axios.get("http://localhost:5002/vendors/", {
+  //       headers: { Authorization: `Bearer ${authToken}` },
+  //     });
 
-      if (res.data.vendor) {
-        setVendorId(res.data.vendor.id);
-      }
-    } catch (error) {
-      console.error("Error fetching vendor details:", error);
-    }
-  };
+  //     if (res.data.vendor) {
+  //       setVendorId(res.data.vendor.id);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching vendor details:", error);
+  //   }
+  // };
 
   const fetchVendorStores = async () => {
     try {
@@ -82,17 +81,30 @@ const VendorDashboard = () => {
     }
   };
 
-  const fetchVendorSales = async () => {
+  // const fetchVendorSales = async () => {
+  //   try {
+  //     const res = await axios.get(`http://localhost:5002/vendors/${vendorId}/sales`, {
+  //       headers: { Authorization: `Bearer ${authToken}` },
+  //     });
+  //     setSales(res.data.total_sales);
+  //   } catch (error) {
+  //     console.error("Error fetching vendor sales:", error);
+  //   }
+  // };
+
+  const fetchDashboardData = async () => {
     try {
-      const res = await axios.get(`http://localhost:5002/vendors/${vendorId}/sales`, {
+      const res = await axios.get("http://localhost:5002/vendors/dashboard/", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      setSales(res.data.total_sales);
+
+      if (res.data.success) {
+        setDashboardData(res.data);
+      }
     } catch (error) {
-      console.error("Error fetching vendor sales:", error);
+      console.error("Error fetching dashboard data:", error);
     }
   };
-
   return (
     <div className="p-10 bg-gray-100 h-screen overflow-auto mt-10">
       <h1 className="text-2xl font-bold">Vendor Dashboard</h1>
@@ -128,23 +140,26 @@ const VendorDashboard = () => {
       {/* Dashboard Cards */}
       <div className="grid grid-cols-3 gap-6 mt-6">
         {/* Total Stores */}
-        <DashboardCard title="Total Stores" value={stores.length} icon={<Store size={28} />} />
+        <DashboardCard title="Total Stores" value={dashboardData.totalStores} icon={<Store size={28} />} />
 
         {/* Approved Stores */}
-        <DashboardCard title="Approved Stores" value={approvedStores} color="text-green-600" border="border-green-300" icon={<CheckCircle size={28} className="text-green-600" />} />
+        <DashboardCard title="Approved Stores" value={dashboardData.approvedStores} color="text-green-600" border="border-green-300" icon={<CheckCircle size={28} className="text-green-600" />} />
 
         {/* Pending Stores */}
-        <DashboardCard title="Pending Stores" value={pendingStores} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
+        <DashboardCard title="Pending Stores" value={dashboardData.pendingStores} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
 
         {/* Total Products */}
-        <DashboardCard title="Total Products" value={products.length} icon={<Package size={28} />} />
+        <DashboardCard title="Total Products" value={dashboardData.totalProducts} icon={<Package size={28} />} />
 
         {/* Approved Products */}
-        <DashboardCard title="Approved Products" value={approvedProducts} color="text-green-600" border="border-green-300" icon={<CheckCircle size={28} className="text-green-600" />} />
+        <DashboardCard title="Approved Products" value={dashboardData.approvedProducts} color="text-green-600" border="border-green-300" icon={<CheckCircle size={28} className="text-green-600" />} />
 
         {/* Pending Products */}
-        <DashboardCard title="Pending Products" value={pendingProducts} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
-
+        <DashboardCard title="Pending Products" value={dashboardData.pendingProducts} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
+        
+        {/* Total Sales */}
+        {/* <DashboardCard title="Total Sales" value={`$${sales}`} color="text-blue-600" border="border-blue-300" icon={<DollarSign size={28} className="text-blue-600" />} colSpan="col-span-3" /> */}
+        
         {/* Total Sales */}
         {/* <DashboardCard title="Total Sales" value={`$${sales}`} color="text-blue-600" border="border-blue-300" icon={<DollarSign size={28} className="text-blue-600" />} colSpan="col-span-3" /> */}
       </div>
