@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { Store, Package, Clock, CheckCircle, ShoppingBag, DollarSign } from "lucide-react";
 import showToast from "../../components/showToast";
 
 const VendorDashboard = () => {
@@ -36,7 +37,6 @@ const VendorDashboard = () => {
 
       if (res.data.vendor) {
         setVendorId(res.data.vendor.id);
-        //showToast({ label: "Manage ", type: "success" });
       }
     } catch (error) {
       console.error("Error fetching vendor details:", error);
@@ -50,7 +50,6 @@ const VendorDashboard = () => {
       });
       setStores(res.data.stores);
 
-      // Filter pending and approved stores
       const pending = res.data.stores.filter((store) => store.status === "pending").length;
       const approved = res.data.stores.filter((store) => store.status === "approved").length;
 
@@ -71,7 +70,6 @@ const VendorDashboard = () => {
 
       setProducts(res.data.products);
 
-      // Filter pending and approved products
       const pending = res.data.products.filter((product) => product.status === "pending").length;
       const approved = res.data.products.filter((product) => product.status === "approved").length;
 
@@ -80,7 +78,7 @@ const VendorDashboard = () => {
       showToast({ label: "Manage your products!", type: "success" });
     } catch (error) {
       console.error("Error fetching vendor products:", error);
-      showToast({ label: "Failed to fetch the products!", type: "success" });
+      showToast({ label: "Failed to fetch the products!", type: "error" });
     }
   };
 
@@ -114,8 +112,8 @@ const VendorDashboard = () => {
           Manage Products
         </button>
         <button
-          className="bg-yellow-500 text-white px-6 py-2 rounded shadow-md hover:bg-yellow-600"  
-           onClick={() => navigate("/vendor/orders")}
+          className="bg-yellow-500 text-white px-6 py-2 rounded shadow-md hover:bg-yellow-600"
+          onClick={() => navigate("/vendor/orders")}
         >
           Manage Orders
         </button>
@@ -124,46 +122,38 @@ const VendorDashboard = () => {
       {/* Dashboard Cards */}
       <div className="grid grid-cols-3 gap-6 mt-6">
         {/* Total Stores */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h3 className="text-xl font-semibold">Total Stores</h3>
-          <p className="text-gray-600 text-2xl font-bold">{stores.length}</p>
-        </div>
+        <DashboardCard title="Total Stores" value={stores.length} icon={<Store size={28} />} />
 
         {/* Approved Stores */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-green-300">
-          <h3 className="text-xl font-semibold text-green-600">Approved Stores</h3>
-          <p className="text-green-600 text-2xl font-bold">{approvedStores}</p>
-        </div>
+        <DashboardCard title="Approved Stores" value={approvedStores} color="text-green-600" border="border-green-300" icon={<CheckCircle size={28} className="text-green-600" />} />
 
         {/* Pending Stores */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-yellow-300">
-          <h3 className="text-xl font-semibold text-yellow-600">Pending Stores</h3>
-          <p className="text-yellow-600 text-2xl font-bold">{pendingStores}</p>
-        </div>
+        <DashboardCard title="Pending Stores" value={pendingStores} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
 
         {/* Total Products */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h3 className="text-xl font-semibold">Total Products</h3>
-          <p className="text-gray-600 text-2xl font-bold">{products.length}</p>
-        </div>
+        <DashboardCard title="Total Products" value={products.length} icon={<Package size={28} />} />
 
         {/* Approved Products */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-green-300">
-          <h3 className="text-xl font-semibold text-green-600">Approved Products</h3>
-          <p className="text-green-600 text-2xl font-bold">{approvedProducts}</p>
-        </div>
+        <DashboardCard title="Approved Products" value={approvedProducts} color="text-green-600" border="border-green-300" icon={<CheckCircle size={28} className="text-green-600" />} />
 
         {/* Pending Products */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-yellow-300">
-          <h3 className="text-xl font-semibold text-yellow-600">Pending Products</h3>
-          <p className="text-yellow-600 text-2xl font-bold">{pendingProducts}</p>
-        </div>
+        <DashboardCard title="Pending Products" value={pendingProducts} color="text-yellow-600" border="border-yellow-300" icon={<Clock size={28} className="text-yellow-600" />} />
 
         {/* Total Sales */}
-        <div className="bg-white p-6 rounded-lg shadow-md border border-blue-300 col-span-3">
-          <h3 className="text-xl font-semibold text-blue-600">Total Sales</h3>
-          <p className="text-blue-600 text-2xl font-bold">${sales}</p>
-        </div>
+        <DashboardCard title="Total Sales" value={`$${sales}`} color="text-blue-600" border="border-blue-300" icon={<DollarSign size={28} className="text-blue-600" />} colSpan="col-span-3" />
+      </div>
+    </div>
+  );
+};
+
+// Reusable Dashboard Card Component
+const DashboardCard = ({ title, value, color = "text-gray-600", border = "border-gray-200", icon, colSpan = "" }) => {
+  return (
+    <div className={`bg-white p-6 rounded-lg shadow-md border ${border} flex items-center ${colSpan}`}>
+      <div className="mr-4">{icon}</div>
+      <div>
+        <h3 className={`text-xl font-semibold ${color}`}>{title}</h3>
+        <p className={`${color} text-2xl font-bold`}>{value}</p>
       </div>
     </div>
   );

@@ -1,63 +1,142 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-//import Sidebar from "../components/sidebar";
-import showToast from "../../components/showToast";
+import { useSelector } from "react-redux";
+import { FaSortUp, FaSortDown } from "react-icons/fa";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [roleFilter, setRoleFilter] = useState("customer");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
+
+  const authToken = useSelector((state) => state.auth.access_token);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (authToken) fetchUsers();
+  }, [authToken]);
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5004/admin/users");
+      const res = await axios.get("http://127.0.0.1:8000/api/auth/all-users/", {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
       setUsers(res.data.users);
+      filterUsers(res.data.users, roleFilter);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching users:", error.response?.data || error);
     }
   };
 
-  return (
-    <div className="flex h-screen mt-5">
-      <div className="flex-1 bg-gray-100 p-10">
-        <h1 className="text-2xl font-bold mb-4">Total Users</h1>
+  const filterUsers = (allUsers, role) => {
+    const filtered = allUsers.filter((user) => user.role === role);
+    setFilteredUsers(filtered);
+    setCurrentPage(1);
+  };
 
-        <table className="min-w-full bg-white border border-gray-200">
+  useEffect(() => {
+    filterUsers(users, roleFilter);
+  }, [roleFilter, users]);
+
+  const sortUsersById = () => {
+    const sortedUsers = [...filteredUsers].sort((a, b) =>
+      sortOrder === "asc" ? a.id - b.id : b.id - a.id
+    );
+    setFilteredUsers(sortedUsers);
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+  return (
+    <div className="flex flex-col h-screen p-6 bg-gray-50 mt-15">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Admin Users List</h1>
+
+      {/* Tabs for Role Selection */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          className={`px-6 py-2 rounded-lg text-white font-semibold ${
+            roleFilter === "customer" ? "bg-blue-600" : "bg-gray-400"
+          }`}
+          onClick={() => setRoleFilter("customer")}
+        >
+          Customers
+        </button>
+        <button
+          className={`px-6 py-2 rounded-lg text-white font-semibold ${
+            roleFilter === "vendor" ? "bg-blue-600" : "bg-gray-400"
+          }`}
+          onClick={() => setRoleFilter("vendor")}
+        >
+          Vendors
+        </button>
+      </div>
+
+      <div className="overflow-x-auto shadow-lg rounded-lg">
+        <table className="min-w-full bg-white border border-gray-300 rounded-lg">
           <thead>
-            <tr className="bg-gray-800 text-white">
-              <th className="py-2 px-4 border">ID</th>
-              <th className="py-2 px-4 border">Name</th>
-              <th className="py-2 px-4 border">Email</th>
-              <th className="py-2 px-4 border">Role</th>
-              <th className="py-2 px-4 border">Status</th>
+            <tr className="bg-gray-800 text-white text-left">
+              <th className="py-3 px-6 border cursor-pointer flex items-center gap-2" onClick={sortUsersById}>
+                ID {sortOrder === "asc" ? <FaSortUp /> : <FaSortDown />}
+              </th>
+              <th className="py-3 px-6 border">Email</th>
+              <th className="py-3 px-6 border">Role</th>
+              <th className="py-3 px-6 border">Address</th>
+              <th className="py-3 px-6 border">Phone Number</th>
             </tr>
           </thead>
           <tbody>
-            {users.length > 0 ? (
-              users.map((user) => (
-                <tr key={user.id} className="border">
-                  <td className="py-2 px-4">{user.id}</td>
-                  <td className="py-2 px-4">{user.name}</td>
-                  <td className="py-2 px-4">{user.email}</td>
-                  <td className="py-2 px-4">{user.role}</td>
-                  <td className="py-2 px-4">
-                    <span className={`px-2 py-1 text-white rounded ${user.status === "active" ? "bg-green-500" : "bg-red-500"}`}>
-                      {user.status}
-                    </span>
-                  </td>
+            {currentUsers.length > 0 ? (
+              currentUsers.map((user, index) => (
+                <tr key={user.id} className={`border ${index % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100 transition`}>
+                  <td className="py-3 px-6">{user.id}</td>
+                  <td className="py-3 px-6">{user.email}</td>
+                  <td className="py-3 px-6">{user.role}</td>
+                  <td className="py-3 px-6">{user.address ? user.address : "Address is not added"}</td>
+                  <td className="py-3 px-6">{user.phone ? user.phone : "Phone number is not added"}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center py-4 text-gray-600">
+                <td colSpan="5" className="text-center py-6 text-gray-600">
                   No users found.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-6">
+        <button
+          className={`px-4 py-2 mx-2 rounded-lg ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 text-white"}`}
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Prev
+        </button>
+        {[...Array(Math.ceil(filteredUsers.length / usersPerPage))].map((_, i) => (
+          <button
+            key={i}
+            className={`px-4 py-2 mx-1 rounded-lg ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          className={`px-4 py-2 mx-2 rounded-lg ${
+            currentPage === Math.ceil(filteredUsers.length / usersPerPage) ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 text-white"
+          }`}
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === Math.ceil(filteredUsers.length / usersPerPage)}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
