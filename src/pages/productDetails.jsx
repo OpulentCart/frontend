@@ -270,22 +270,22 @@ const ProductDetails = () => {
             </p>
             <p className="text-2xl font-bold text-yellow-600">₹ {product.price}</p>
 
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               {[...Array(fullStars)].map((_, i) => (
                 <FaStar key={`full-${i}`} className="text-yellow-400" size={18} />
               ))}
               {hasHalfStar && <FaStarHalfAlt className="text-yellow-400" size={18} />}
               <span className="text-gray-700 ml-2 text-sm">{validRating} / 5</span>
-            </div>
+            </div> */}
 
             {/* <p className="text-gray-600 text-sm">Likes: <span className="font-medium">{product.likes}</span></p> */}
-            <p
+            {/* <p
               className={`text-base font-medium ${
                 product.stock > 0 ? "text-green-600" : "text-red-600"
               }`}
             >
               {product.stock > 0 ? `In Stock (${product.stock} available)` : "Out of Stock"}
-            </p>
+            </p> */}
 
             <p className="text-gray-700 leading-relaxed text-sm">{product.description}</p>
 
