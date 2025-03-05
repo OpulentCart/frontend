@@ -10,7 +10,11 @@ const OrderPage = () => {
   const [error, setError] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [orderItems, setOrderItems] = useState({});
-  const [orderLoading, setOrderLoading] = useState(false); // Loader for order items
+  const [orderLoading, setOrderLoading] = useState(false);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10;
 
   useEffect(() => {
     if (!authToken) return;
@@ -21,7 +25,7 @@ const OrderPage = () => {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setOrders(response.data.orders);
-        showToast({ label: "Have a look on Your Orders!", type: "success" });
+        showToast({ label: "Have a look at Your Orders!", type: "success" });
       } catch (err) {
         setError("Failed to fetch orders");
         showToast({ label: "Error in fetching your orders", type: "error" });
@@ -35,11 +39,11 @@ const OrderPage = () => {
 
   const fetchOrderItems = async (orderId) => {
     if (orderItems[orderId]) {
-      setExpandedOrder(expandedOrder === orderId ? null : orderId); // Toggle visibility
+      setExpandedOrder(expandedOrder === orderId ? null : orderId);
       return;
     }
 
-    setOrderLoading(true); // Start loader
+    setOrderLoading(true);
 
     try {
       const response = await axios.get(`http://localhost:5006/orders/${orderId}/`, {
@@ -47,8 +51,6 @@ const OrderPage = () => {
       });
 
       let items = response.data.order_items;
-
-      // Convert single object into an array
       if (!Array.isArray(items)) {
         items = [items];
       }
@@ -60,11 +62,24 @@ const OrderPage = () => {
       console.error("Error fetching order items:", err);
       showToast({ label: "Failed to fetch your Order Items", type: "error" });
     } finally {
-      setOrderLoading(false); // Stop loader
+      setOrderLoading(false);
     }
   };
 
-  // 🔹 Full-page Loader (Spinner)
+  // Pagination Logic
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -94,7 +109,7 @@ const OrderPage = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {currentOrders.map((order) => (
                 <React.Fragment key={order.order_id}>
                   <tr className="border-b hover:bg-gray-100 transition-all duration-200">
                     <td className="px-6 py-4 font-medium text-gray-800">{order.order_id}</td>
@@ -123,7 +138,6 @@ const OrderPage = () => {
                     </td>
                   </tr>
 
-                  {/* Order Items Section */}
                   {expandedOrder === order.order_id && (
                     <tr>
                       <td colSpan="5" className="px-6 py-4 bg-gray-50">
@@ -136,7 +150,7 @@ const OrderPage = () => {
                             {orderItems[order.order_id].map((item, index) => (
                               <li key={index} className="border p-2 rounded-md bg-white shadow-sm mb-2">
                                 <p><span className="font-semibold">Product ID:</span> {item.product_id}</p>
-                                <p><span className="font-semibold">Unit Price:</span> ${item.unit_price}</p>
+                                <p><span className="font-semibold">Unit Price:</span> ₹{item.unit_price}</p>
                                 <p><span className="font-semibold">Subtotal:</span> ${item.subtotal}</p>
                                 <p><span className="font-semibold">Order Date:</span> {new Date(item.createdAt).toLocaleDateString()}</p>
                               </li>
@@ -152,6 +166,25 @@ const OrderPage = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={prevPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <p>Page {currentPage} of {totalPages}</p>
+          <button
+            onClick={nextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

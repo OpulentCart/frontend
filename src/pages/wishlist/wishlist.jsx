@@ -32,20 +32,20 @@ const Wishlist = () => {
     }
   };
 
-  const removeFromWishlist = async (productId) => {
+  const removeFromWishlist = async (wishlistId) => {
     try {
-      await axios.delete(`http://localhost:5004/wishlist/${productId}`, {
+      await axios.delete(`http://localhost:5004/wishlist/${wishlistId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-
-      setWishlist((prev) => prev.filter((item) => item.product_id !== productId));
+  
+      setWishlist((prev) => prev.filter((item) => item.wishlist_id !== wishlistId));
       showToast({ label: "Your product is removed from Wishlist!", type: "success" });
     } catch (error) {
       console.error("Error removing product from wishlist:", error);
-      showToast({ label: "Failed to remove the prouct from Wishlist!", type: "error" });
+      showToast({ label: "Failed to remove the product from Wishlist!", type: "error" });
     }
   };
-
+  
   const handleAddToCart = async (productId) => {
     try {
       await axios.post(
@@ -95,7 +95,7 @@ const Wishlist = () => {
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-                  onClick={() => removeFromWishlist(item.product_id)}
+                  onClick={() => removeFromWishlist(item.wishlist_id)}
                 >
                   <FaHeart /> Remove
                 </motion.button>
