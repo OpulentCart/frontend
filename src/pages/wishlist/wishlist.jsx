@@ -3,6 +3,7 @@ import axios from "axios";
 import { FaHeart, FaShoppingCart } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import showToast from "../../components/showToast";
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
@@ -22,8 +23,10 @@ const Wishlist = () => {
       });
 
       setWishlist(response.data?.data || []);
+      showToast({ label: "Buy the products of your Wislist!", type: "success" });
     } catch (error) {
       console.error("Error fetching wishlist:", error.response?.data || error.message);
+      showToast({ label: "Failed to fetch your wishlist", type: "success" });
     } finally {
       setLoading(false);
     }
@@ -36,8 +39,10 @@ const Wishlist = () => {
       });
 
       setWishlist((prev) => prev.filter((item) => item.product_id !== productId));
+      showToast({ label: "Your product is removed from Wishlist!", type: "success" });
     } catch (error) {
       console.error("Error removing product from wishlist:", error);
+      showToast({ label: "Failed to remove the prouct from Wishlist!", type: "error" });
     }
   };
 
@@ -48,10 +53,10 @@ const Wishlist = () => {
         { product_id: productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-
-      alert("Product added to cart!");
+      showToast({ label: "Product added to Cart", type: "success" });
     } catch (error) {
       console.error("Error adding to cart:", error);
+      showToast({ label: "Failed to add the product", type: "error" });
     }
   };
 

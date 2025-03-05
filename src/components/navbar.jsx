@@ -32,6 +32,19 @@ function Navbar() {
     }
   }, []);
 
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get("http://localhost:5008/notifications", {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const fetchedNotifications = response.data.notifications || [];
+      setNotifications(fetchedNotifications);
+      setUnreadCount(fetchedNotifications.filter((notif) => !notif.is_read).length);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
   useEffect(() => {
     if (authToken) {
       const newSocket = io("http://localhost:5008");
@@ -43,18 +56,7 @@ function Navbar() {
         setUnreadCount((prevCount) => prevCount + 1);
       });
 
-      axios
-      .get("http://localhost:5008/notifications", {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
-      .then((response) => {
-        const fetchedNotifications = response.data.notifications || [];
-        setNotifications(fetchedNotifications);
-        setUnreadCount(fetchedNotifications.filter((notif) => !notif.is_read).length);
-      })
-      .catch((error) => {
-        console.error("Error fetching notifications:", error);
-      });
+      fetchNotifications();
       
       return () => newSocket.disconnect();
     }
@@ -84,6 +86,7 @@ function Navbar() {
   const toggleNotificationDropdown = async () => {
     setNotifOpen(!notifOpen);
     if (!notifOpen && unreadCount > 0) {
+      fetchNotifications();
       await markAllAsRead();
       setUnreadCount(0);
     }

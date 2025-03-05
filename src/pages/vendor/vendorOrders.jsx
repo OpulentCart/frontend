@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import showToast from "../../components/showToast";
 
 const VendorOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -20,7 +21,7 @@ const VendorOrders = () => {
 
         if (response.data.success) {
           const orderedProducts = response.data.orderedProducts;
-
+          
           const ordersWithDetails = await Promise.all(
             orderedProducts.map(async (order) => {
               try {
@@ -40,9 +41,11 @@ const VendorOrders = () => {
           );
 
           setOrders(ordersWithDetails);
+          showToast({ label: "Manage your Orders!", type: "success" });
         }
       } catch (error) {
         console.error("Error fetching orders:", error);
+        showToast({ label: "Failed to fetch your Orders!", type: "error" });
       } finally {
         setLoading(false);
       }
@@ -66,8 +69,10 @@ const VendorOrders = () => {
           order.order_item_id === orderItemId ? { ...order, status: newStatus } : order
         )
       );
+      showToast({ label: "Your Order is updated sucessfully!", type: "success" });
     } catch (error) {
       console.error("Error updating order status:", error);
+      showToast({ label: "Failed to update your Order", type: "error" });
     }
   };
 

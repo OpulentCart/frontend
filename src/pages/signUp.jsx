@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import showToast from "../components/showToast";
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -51,7 +52,8 @@ function SignupPage() {
   // Generate OTP
   const handleGenerateOtp = async () => {
     if (!email || !isValidEmail(email)) {
-      alert("Please enter a valid email.");
+      //alert("Please enter a valid email.");
+      showToast({ label: "Please enter a valid email!", type: "warning" });
       return;
     }
 
@@ -67,12 +69,15 @@ function SignupPage() {
       if (response.ok) {
         setOtpSent(true);
         setOtpTimer(30); // Start 30-second timer
-        alert(data.message || `OTP Sent to ${email}`);
+        //alert(data.message || `OTP Sent to ${email}`);
+        showToast({ label: `OTP Sent to ${email}`, type: "success" });
       } else {
-        alert(data.error || "Failed to send OTP");
+        //alert(data.error || "Failed to send OTP");
+        showToast({ label: "Failed to sent OTP", type: "error" });
       }
     } catch (error) {
-      alert("Error sending OTP.");
+      //alert("Error sending OTP.");
+      showToast({ label: "Error sending OTP!", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -83,7 +88,8 @@ function SignupPage() {
     const otpCode = otp.join("").trim();
     
     if (otpCode.length !== 6 || isNaN(otpCode)) {
-      alert("Please enter a valid 6-digit OTP.");
+      //alert("Please enter a valid 6-digit OTP.");
+      showToast({ label: "Please enter a valid 6-digit OTP.", type: "warning" });
       return;
     }
 
@@ -98,13 +104,16 @@ function SignupPage() {
       const data = await response.json();
       if (response.ok) {
         setOtpVerified(true);
-        alert("OTP Verified! You can now Login.");
+        //alert("OTP Verified! You can now Login.");
+        showToast({ label: "OTP Verified! You can now Login.", type: "success" });
         navigate("/login");
       } else {
-        alert(data.error || "Invalid OTP. Try again.");
+        //alert(data.error || "Invalid OTP. Try again.");
+        showToast({ label: "Invalid OTP. Try again.", type: "success" });
       }
     } catch (error) {
-      alert("Error verifying OTP.");
+      //alert("Error verifying OTP.");
+      showToast({ label: "Error verifying OTP.", type: "success" });
     } finally {
       setLoading(false);
     }

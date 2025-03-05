@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import NotificationIcon from "../../components/notifications";
 import { useSelector } from "react-redux";
+import showToast from "../../components/showToast";
 
 const AdminDashboard = () => {
 
@@ -37,8 +38,10 @@ const AdminDashboard = () => {
     try {
       const res = await axios.get("http://localhost:5004/stores/pending");
       setStores(res.data.stores);
+      //showToast({ label: "Manage the Vendor Stores!", type: "success" });
     } catch (error) {
       console.error("Error fetching stores:", error);
+      //showToast({ label: "Failed to fetch the Vendor stores", type: "error" });
     }
   };
 
@@ -46,8 +49,10 @@ const AdminDashboard = () => {
     try {
       const res = await axios.get("http://localhost:5004/products/pending");
       setProducts(res.data.products);
+      //showToast({ label: "Manage the Vendor Products!", type: "success" });
     } catch (error) {
       console.error("Error fetching products:", error);
+      //showToast({ label: "Failed to fetch the products!", type: "error" });
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import showToast from "../../components/showToast";
 
 const AdminProductApproval = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -47,8 +48,10 @@ const AdminProductApproval = () => {
       }));
 
       setProducts(allProducts);
+      showToast({ label: "Manage the Vendor Products!", type: "success" });
     } catch (error) {
       console.error("Error fetching products:", error);
+      showToast({ label: "Failed to fetch the products", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -66,9 +69,11 @@ const AdminProductApproval = () => {
           product.id === id ? { ...product, status } : product
         )
       );
+      showToast({ label: "Product Status updated successfully!", type: "success" });
     } catch (error) {
       console.error("Error updating product status:", error);
       setError("Failed to update product status. Please try again.");
+      showToast({ label: "Failed to update the status!", type: "error" });
     } finally {
       setUpdatingId(null);
     }

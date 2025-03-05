@@ -40,7 +40,7 @@ function LoginPage() {
         setTimeout(() => navigate("/"), 1000);
       } else {
         const errorData = await response.json();
-        showToast({ label: errorData.message || "Login failed. Please try again.", type: "error" });
+        showToast({ label: errorData.message || "Invalid Credentials", type: "error" });
       }
     } catch (error) {
       showToast({ label: "Something went wrong! Please try again later.", type: "error" });

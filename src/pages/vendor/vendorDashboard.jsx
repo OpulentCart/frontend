@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import showToast from "../../components/showToast";
 
 const VendorDashboard = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -35,6 +36,7 @@ const VendorDashboard = () => {
 
       if (res.data.vendor) {
         setVendorId(res.data.vendor.id);
+        //showToast({ label: "Manage ", type: "success" });
       }
     } catch (error) {
       console.error("Error fetching vendor details:", error);
@@ -54,8 +56,10 @@ const VendorDashboard = () => {
 
       setPendingStores(pending);
       setApprovedStores(approved);
+      showToast({ label: "Manage your Stores!", type: "success" });
     } catch (error) {
-      console.error("Error fetching vendor stores:", error);
+      console.error("Error fetching vendor stores!", error);
+      showToast({ label: "Failed to fetch your stores!", type: "error" });
     }
   };
 
@@ -73,8 +77,10 @@ const VendorDashboard = () => {
 
       setPendingProducts(pending);
       setApprovedProducts(approved);
+      showToast({ label: "Manage your products!", type: "success" });
     } catch (error) {
       console.error("Error fetching vendor products:", error);
+      showToast({ label: "Failed to fetch the products!", type: "success" });
     }
   };
 

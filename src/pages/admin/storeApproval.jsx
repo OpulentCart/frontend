@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import showToast from "../../components/showToast";
 
 const ApproveStore = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -56,8 +57,10 @@ const ApproveStore = () => {
       );
 
       fetchStores(); // Refresh list
+      showToast({ label: "Store status updated successfully!", type: "success" });
     } catch (error) {
       console.error("Error updating store status:", error);
+      showToast({ label: "Failed to update the store status", type: "error" });
     } finally {
       setUpdatingId(null); // Hide loader
     }

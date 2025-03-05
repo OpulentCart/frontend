@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import showToast from "../../components/showToast";
 
 const OrderPage = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -20,8 +21,10 @@ const OrderPage = () => {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setOrders(response.data.orders);
+        showToast({ label: "Have a look on Your Orders!", type: "success" });
       } catch (err) {
         setError("Failed to fetch orders");
+        showToast({ label: "Error in fetching your orders", type: "error" });
       } finally {
         setLoading(false);
       }
@@ -52,8 +55,10 @@ const OrderPage = () => {
 
       setOrderItems((prev) => ({ ...prev, [orderId]: items }));
       setExpandedOrder(orderId);
+      showToast({ label: "Your Order Items are fetched successfully!", type: "success" });
     } catch (err) {
       console.error("Error fetching order items:", err);
+      showToast({ label: "Failed to fetch your Order Items", type: "error" });
     } finally {
       setOrderLoading(false); // Stop loader
     }
