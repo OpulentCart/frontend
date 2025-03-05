@@ -21,7 +21,6 @@ const Wishlist = () => {
       const response = await axios.get("http://localhost:5004/wishlist", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-
       setWishlist(response.data?.data || []);
       showToast({ label: "Buy the products of your Wislist!", type: "success" });
     } catch (error) {

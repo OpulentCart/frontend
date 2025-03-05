@@ -3,6 +3,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { jwtDecode } from "jwt-decode";
 import { useSelector } from "react-redux";
+import showToast from "../components/showToast";
 
 const VendorStoreForm = () => {
   const [categories, setCategories] = useState([]); 
@@ -87,15 +88,15 @@ const VendorStoreForm = () => {
   
     if (step === 1) {
       if (!formData.businessEmail.trim()) {
-        alert("Business email is required.");
+        showToast({ label: "Business Email is Reqiured", type: "warning" });
         return;
       }
       if (!validateEmail(formData.businessEmail)) {
-        alert("Invalid email format. Please enter a valid email.");
+        showToast({ label: "Invalid email format. Please enter a valid email.", type: "warning" });
         return;
       }
       if (!formData.businessPhone.trim()) {
-        alert("Business phone is required.");
+        showToast({ label: "Business phone is required.", type: "warning" });
         return;
       }
     } else if (step === 2) {
@@ -117,7 +118,7 @@ const VendorStoreForm = () => {
     e.preventDefault();
   
     if (!authToken) {
-      alert("No authentication token found. Please log in again.");
+      showToast({ label: "No authentication token found. Please log in again.", type: "error" });
       return;
     }
   
@@ -126,7 +127,7 @@ const VendorStoreForm = () => {
       const decodedToken = jwtDecode(authToken);
       user_id = decodedToken.user_id;
     } catch (error) {
-      alert("Invalid token. Please log in again.");
+      showToast({ label: "Invalid token. Please log in again.", type: "error" });
       return;
     }
   
@@ -155,12 +156,12 @@ const VendorStoreForm = () => {
       });
   
       if (response.ok) {
-        alert("Form submitted successfully!");
+        showToast({ label: "Form submitted successfully!", type: "error" });
       } else {
-        alert("Failed to submit form.");
+        showToast({ label: "Failed to submit form.", type: "error" });
       }
     } catch (error) {
-      alert("Network error. Try again later.");
+      showToast({ label: "Network error. Try again later.", type: "error" });
     }
   };
   
