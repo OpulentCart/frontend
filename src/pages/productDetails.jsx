@@ -8,6 +8,8 @@ import { jwtDecode } from "jwt-decode";
 import debounce from "lodash/debounce";
 import Loader from "../../src/components/loader"; // Adjust path as needed
 
+const API_URL = "http://localhost:5007/cart-items";
+
 const ProductDetails = () => {
   const authToken = useSelector((state) => state.auth.access_token);
   const { id } = useParams();
@@ -176,6 +178,59 @@ const ProductDetails = () => {
     [authToken]
   );
 
+  const handleAddToCart = async () => {
+    if (isInCart || !authToken) return;
+
+    setIsLoading(true);
+    try {
+      const cartId = await getOrCreateCart();
+      if (!cartId) {
+        throw new Error("Failed to get or create cart");
+      }
+
+      await axios.post(
+        API_URL,
+        { cart_id: cartId, product_id: product?.id, quantity: 1 },
+        { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
+      );
+      setIsInCart(true);
+
+      const userId = getUserIdFromToken(authToken);
+      if (!userId) throw new Error("Invalid user token");
+
+      const interactionPayload = {
+        user_id: Number(userId),
+        product_id: Number(product.id),
+        interaction_type: "add_to_cart",
+        rating: 0,
+        timestamp: new Date().toISOString(),
+      };
+
+      const interactionResponse = await axios.post(
+        INTERACTION_API_URL,
+        interactionPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Interaction recorded:", interactionResponse.data);
+    } catch (error) {
+      console.error("Error in handleAddToCart:", {
+        message: error.message,
+        response: error.response?.data,
+      });
+      setError("Failed to add to cart or record interaction. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   const handleRelatedProductClick = (productId) => {
     setLoading(true);
     debouncedHandleCardClick(productId); // Record interaction
@@ -299,7 +354,7 @@ const ProductDetails = () => {
                 }`}
                 disabled={product.stock === 0}
               >
-                <FaShoppingCart size={20} /> Add to Cart
+                <FaShoppingCart size={20} onClick={handleAddToCart}/> Add to Cart
               </motion.button>
               <motion.button
                 variants={buttonVariants}

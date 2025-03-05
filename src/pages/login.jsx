@@ -40,7 +40,7 @@ function LoginPage() {
         // ✅ Fetch cart_id separately
         const cartResponse = await fetch("http://localhost:5007/carts", {
           method: "GET",
-          headers: {
+          headers: {     
             Authorization: `Bearer ${data.access}`,
           },
         });
