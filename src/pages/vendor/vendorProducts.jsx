@@ -53,16 +53,33 @@ const VendorProducts = () => {
   };
 
   const deleteProduct = async (productId) => {
+    if (!authToken) {
+      console.error("Auth token is missing. Cannot delete product.");
+      return;
+    }
+  
     if (!window.confirm("Are you sure you want to delete this product?")) return;
+  
     try {
-      await axios.delete(`http://localhost:5004/products/${productId}`, {
+      const res = await axios.delete(`http://localhost:5004/products/${productId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      setProducts(products.filter((product) => product.product_id !== productId));
+      await axios.delete(`http://127.0.0.1:8001/products/${productId}/embeddings/delete/`, {
+      });
+  
+      if (res.status === 200) {
+        setProducts((prevProducts) => prevProducts.filter((product) => product.product_id !== productId));
+        alert("Product deleted successfully!");
+      } else {
+        console.error("Failed to delete product:", res.data);
+        alert("Failed to delete product.");
+      }
     } catch (error) {
       console.error("Error deleting product:", error);
+      alert("An error occurred while deleting the product.");
     }
   };
+  
 
   const updateProduct = (productId) => {
     alert(`Update functionality for product ID: ${productId} (Implement this!)`);

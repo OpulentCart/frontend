@@ -64,6 +64,9 @@ const AdminProductApproval = () => {
         headers: { Authorization: `Bearer ${authToken}` }
       });
 
+      await axios.put(`http://127.0.0.1:8001/products/${id}/embeddings/update/`, { status }, {
+      });
+
       setProducts((prevProducts) =>
         prevProducts.map((product) =>
           product.id === id ? { ...product, status } : product
