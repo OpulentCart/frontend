@@ -52,8 +52,7 @@ function Navbar() {
 
       // Handle new notifications
       newSocket.on("newNotification", (newNotif) => {
-        setNotifications((prevNotifications) => [...prevNotifications, newNotif]);
-        setUnreadCount((prevCount) => prevCount + 1);
+        fetchNotifications();
       });
 
       fetchNotifications();
