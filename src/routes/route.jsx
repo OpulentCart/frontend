@@ -25,6 +25,7 @@ import Wishlist from "../pages/wishlist/wishlist";
 import OrderPage from "../pages/orders/order";
 import VendorOrders from "../pages/vendor/vendorOrders";
 import VendorSales from "../pages/vendor/vendoSales";
+import AdminOrders from "../pages/admin/adminOrders";
 
 function AppRoutes() {
   return (
@@ -144,6 +145,7 @@ function AppRoutes() {
         <Route path="stores" element={<StoreApproval />} />
         <Route path="products" element={<ProductApproval />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="orders" element={<AdminOrders />} />
       </Route>
     </Routes>
   );

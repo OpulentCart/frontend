@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Store, Package, Users } from "lucide-react";
+import { LayoutDashboard, Store, Package, Users, ClipboardList } from "lucide-react";
 
 const Sidebar = () => {
   return (
@@ -58,6 +58,19 @@ const Sidebar = () => {
           >
             <Users size={20} />
             Total Users
+          </NavLink>
+        </li>
+        <li className="mb-2">
+          <NavLink
+            to="/admin/orders"
+            className={({ isActive }) =>
+              `flex items-center gap-2 block p-2 rounded ${
+                isActive ? "bg-yellow-400 text-gray-900 font-bold" : "hover:underline"
+              }`
+            }
+          >
+            <ClipboardList size={20} /> {/* Changed Icon */}
+            Total Orders
           </NavLink>
         </li>
       </ul>

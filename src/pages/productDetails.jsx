@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import debounce from "lodash/debounce";
 import Loader from "../../src/components/loader"; // Adjust path as needed
 
-const API_URL = "http://localhost:5007/cart-items";
+
 
 const ProductDetails = () => {
   const authToken = useSelector((state) => state.auth.access_token);
@@ -26,8 +26,35 @@ const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [cartMessage, setCartMessage] = useState("");
+
 
   const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
+  const API_URL = "http://localhost:5007/cart-items";
+
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      const cartId = sessionStorage.getItem("cart_id");
+      if (!cartId || !authToken) return;
+
+      try {
+        const response = await axios.get(`${API_URL}/${cartId}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const existingItem = response.data.cartItems.find(
+          (item) => item.product_id === product?.id
+        );
+        setIsInCart(!!existingItem);
+      } catch (error) {
+        console.error("Error fetching cart items:", error);
+      }
+    };
+
+    fetchCartItems();
+  }, [id, authToken]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -178,57 +205,108 @@ const ProductDetails = () => {
     [authToken]
   );
 
-  const handleAddToCart = async () => {
-    if (isInCart || !authToken) return;
-
-    setIsLoading(true);
+  const getUserIdFromToken = useCallback((token) => {
     try {
-      const cartId = await getOrCreateCart();
-      if (!cartId) {
-        throw new Error("Failed to get or create cart");
-      }
-
-      await axios.post(
-        API_URL,
-        { cart_id: cartId, product_id: product?.id, quantity: 1 },
-        { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
-      );
-      setIsInCart(true);
-
-      const userId = getUserIdFromToken(authToken);
-      if (!userId) throw new Error("Invalid user token");
-
-      const interactionPayload = {
-        user_id: Number(userId),
-        product_id: Number(product.id),
-        interaction_type: "add_to_cart",
-        rating: 0,
-        timestamp: new Date().toISOString(),
-      };
-
-      const interactionResponse = await axios.post(
-        INTERACTION_API_URL,
-        interactionPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Interaction recorded:", interactionResponse.data);
+      const decoded = jwtDecode(token);
+      return decoded?.user_id;
     } catch (error) {
-      console.error("Error in handleAddToCart:", {
-        message: error.message,
-        response: error.response?.data,
-      });
-      setError("Failed to add to cart or record interaction. Please try again.");
-      setTimeout(() => setError(null), 3000);
-    } finally {
-      setIsLoading(false);
+      console.error("Error decoding authToken:", error);
+      return null;
     }
-  };
+  }, []);
+
+  const getOrCreateCart = useCallback(async () => {
+    if (!authToken) return null;
+
+    const userId = getUserIdFromToken(authToken);
+    if (!userId) return null;
+
+    try {
+      let cartId = sessionStorage.getItem("cart_id");
+
+      if (!cartId || cartId === "undefined") {
+        const response = await axios.get("http://localhost:5007/carts", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        cartId = response.data?.cart?.cart_id;
+
+        if (!cartId) {
+          const createResponse = await axios.post(
+            "http://localhost:5007/carts",
+            { user_id: userId },
+            { headers: { Authorization: `Bearer ${authToken}` } }
+          );
+          cartId = createResponse.data?.cart?.cart_id;
+        }
+
+        if (cartId) sessionStorage.setItem("cart_id", cartId);
+      }
+      return cartId;
+    } catch (error) {
+      console.error("Error managing cart:", error.response?.data || error.message);
+      return null;
+    }
+  }, [authToken, getUserIdFromToken]);
+
+ 
+const handleAddToCart = async () => {
+  if (isInCart || !authToken) return;
+
+  setIsLoading(true);
+  try {
+    const cartId = await getOrCreateCart();
+    if (!cartId) {
+      throw new Error("Failed to get or create cart");
+    }
+    console.log("Product ID:", id);
+
+    await axios.post(
+      API_URL,
+      { cart_id: cartId, product_id: id, quantity: 1 },
+      { headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json" } }
+    );
+    setIsInCart(true);
+
+    // Show success message
+    setCartMessage("Product added to cart!");
+
+    setTimeout(() => setCartMessage(""), 3000); // Remove message after 3 seconds
+
+    const userId = getUserIdFromToken(authToken);
+    if (!userId) throw new Error("Invalid user token");
+
+    const interactionPayload = {
+      user_id: Number(userId),
+      product_id: Number(product.id),
+      interaction_type: "add_to_cart",
+      rating: 0,
+      timestamp: new Date().toISOString(),
+    };
+
+    const interactionResponse = await axios.post(
+      INTERACTION_API_URL,
+      interactionPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Interaction recorded:", interactionResponse.data);
+  } catch (error) {
+    console.error("Error in handleAddToCart:", {
+      message: error.message,
+      response: error.response?.data,
+    });
+    setError("Failed to add to cart or record interaction. Please try again.");
+    setTimeout(() => setError(null), 3000);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
 
   const handleRelatedProductClick = (productId) => {
@@ -325,37 +403,41 @@ const ProductDetails = () => {
             </p>
             <p className="text-2xl font-bold text-yellow-600">₹ {product.price}</p>
 
-            {/* <div className="flex items-center gap-2">
-              {[...Array(fullStars)].map((_, i) => (
-                <FaStar key={`full-${i}`} className="text-yellow-400" size={18} />
-              ))}
-              {hasHalfStar && <FaStarHalfAlt className="text-yellow-400" size={18} />}
-              <span className="text-gray-700 ml-2 text-sm">{validRating} / 5</span>
-            </div> */}
-
-            {/* <p className="text-gray-600 text-sm">Likes: <span className="font-medium">{product.likes}</span></p> */}
-            {/* <p
-              className={`text-base font-medium ${
-                product.stock > 0 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {product.stock > 0 ? `In Stock (${product.stock} available)` : "Out of Stock"}
-            </p> */}
 
             <p className="text-gray-700 leading-relaxed text-sm">{product.description}</p>
 
             <div className="flex items-center gap-4">
-              <motion.button
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className={`flex items-center gap-2 bg-yellow-600 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:bg-yellow-700 transition-all duration-200 ${
-                  product.stock === 0 ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={product.stock === 0}
-              >
-                <FaShoppingCart size={20} onClick={handleAddToCart}/> Add to Cart
-              </motion.button>
+            <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 200 }}
+        className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg shadow-md transition-all duration-300
+          ${
+            isInCart
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 hover:shadow-lg text-gray-900 font-semibold"
+          }
+          ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleAddToCart();
+        }}
+        disabled={isInCart || isLoading}
+      >
+        <FaShoppingCart size={18} />
+        {isLoading ? "Processing..." : isInCart ? "Added to Cart" : "Add to Cart"}
+      </motion.button>
+      {cartMessage && (
+        <motion.p 
+          className="text-green-600 font-medium mt-2"
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+        >
+          {cartMessage}
+        </motion.p>
+      )}
+
               <motion.button
                 variants={buttonVariants}
                 whileHover="hover"
