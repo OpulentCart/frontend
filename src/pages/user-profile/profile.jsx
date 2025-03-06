@@ -171,7 +171,7 @@ function Profile() {
         </div>
 
         {/* Orders Section (Conditional Rendering for Non-Vendors) */}
-        {user.role !== "vendor" && (
+        {/* {user.role !== "vendor" && (
           <div className="mt-8">
             <h3 className="text-2xl font-semibold text-gray-900 mb-4">Your Orders</h3>
             {orders.length === 0 ? (
@@ -217,7 +217,7 @@ function Profile() {
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Buttons */}
         <div className="mt-6 grid grid-cols-2 gap-4">

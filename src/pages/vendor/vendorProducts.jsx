@@ -12,6 +12,80 @@ const VendorProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [updatedProduct, setUpdatedProduct] = useState({
+    name: "",
+    brand: "",
+    price: "",
+    description: "",
+  });
+
+  useEffect(() => {
+    console.log("Updated Products:", products);
+  }, [products]);
+  
+
+  const handleEditClick = (product) => {
+    setEditingProduct(product);
+    setUpdatedProduct({
+      name: product.name,
+      brand: product.brand,
+      price: product.price,
+      description: product.description,
+    });
+  };
+
+  const handleInputChange = (e) => {
+    setUpdatedProduct({ ...updatedProduct, [e.target.name]: e.target.value });
+  };
+  
+  const handleUpdateProduct = async (productId) => {
+    if (!productId) {
+      console.error("Error: productId is undefined.");
+      return alert("Invalid product ID.");
+    }
+  
+    try {
+      console.log("Updated Product Data:", JSON.stringify(updatedProduct, null, 2));
+  
+      const res = await axios.put(
+        `http://localhost:5004/products/details/${productId}`,
+        { 
+          product_id: productId, 
+          ...updatedProduct 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      if (res.data.success) {
+        setProducts((prevProducts) =>
+          (prevProducts || [])
+            .map((p) =>
+              p.product_id === productId
+                ? { ...p, ...res.data.data, status: res.data.data.status || p.status }
+                : p
+            )
+            .filter(Boolean) // Removes any undefined/null values
+        );
+        
+        
+        setEditingProduct(null);
+        alert("Product updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating product:", error.response?.data || error);
+      alert("Failed to update product.");
+    }
+    
+  };
+  
+  
+
   useEffect(() => {
     fetchVendorProducts();
   }, [authToken]);
@@ -33,16 +107,22 @@ const VendorProducts = () => {
   };
 
   const toggleDetails = async (productId) => {
+    console.log("Toggling details for product ID:", productId);
+  
     if (expandedProduct?.product_id === productId) {
+      console.log("Hiding details for:", productId);
       setExpandedProduct(null);
       return;
     }
+  
     try {
       setLoadingDetails(true);
       const res = await axios.get(`http://localhost:5004/products/${productId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
+  
       if (res.data.success) {
+        console.log("Product details received:", res.data.product);
         setExpandedProduct(res.data.product);
       }
     } catch (error) {
@@ -51,7 +131,7 @@ const VendorProducts = () => {
       setLoadingDetails(false);
     }
   };
-
+  
   const deleteProduct = async (productId) => {
     if (!authToken) {
       console.error("Auth token is missing. Cannot delete product.");
@@ -85,7 +165,9 @@ const VendorProducts = () => {
     alert(`Update functionality for product ID: ${productId} (Implement this!)`);
   };
 
-  const filteredProducts = products.filter((product) => product.status === activeTab);
+  const filteredProducts = (products || [])
+  .filter((product) => product && product.status && product.status === activeTab);
+
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -134,7 +216,7 @@ const VendorProducts = () => {
                   <tr className="border-b hover:bg-gray-100">
                     <td className="p-3">{product.name}</td>
                     <td className="p-3">{product.brand}</td>
-                    <td className="p-3 text-green-600 font-bold">${product.price}</td>
+                    <td className="p-3 text-green-600 font-bold">₹{product.price}</td>
                     <td className="p-3 text-center">
                       <div className="flex gap-2 justify-center flex-nowrap">
                         <button
@@ -145,7 +227,8 @@ const VendorProducts = () => {
                         </button>
                         <button
                           className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition"
-                          onClick={() => updateProduct(product.product_id)}
+                          onClick={() => handleEditClick(product)}
+
                         >
                           Update
                         </button>
@@ -186,6 +269,54 @@ const VendorProducts = () => {
               ))}
             </tbody>
           </table>
+          {editingProduct && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 className="text-xl font-bold mb-4">Edit Product</h2>
+                <input
+                  type="text"
+                  name="name"
+                  value={updatedProduct.name}
+                  onChange={handleInputChange}
+                  className="border p-2 w-full mb-2"
+                  placeholder="Product Name"
+                />
+                <input
+                  type="text"
+                  name="brand"
+                  value={updatedProduct.brand}
+                  onChange={handleInputChange}
+                  className="border p-2 w-full mb-2"
+                  placeholder="Brand"
+                />
+                <input
+                  type="number"
+                  name="price"
+                  value={updatedProduct.price}
+                  onChange={handleInputChange}
+                  className="border p-2 w-full mb-2"
+                  placeholder="Price"
+                />
+                <textarea
+                  name="description"
+                  value={updatedProduct.description}
+                  onChange={handleInputChange}
+                  className="border p-2 w-full mb-2"
+                  placeholder="Description"
+                />
+                <div className="flex justify-end space-x-2">
+                  <button onClick={() => setEditingProduct(null)} className="px-4 py-2 bg-gray-400 text-white rounded">
+                    Cancel
+                  </button>
+                  <button onClick={() => handleUpdateProduct(editingProduct.product_id)} className="px-4 py-2 bg-blue-500 text-white rounded">
+                    Update
+                  </button>
+
+                </div>
+              </div>
+            </div>
+          )}
+
 
           {/* Pagination Controls */}
           <div className="flex justify-between mt-6">
@@ -213,6 +344,7 @@ const VendorProducts = () => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

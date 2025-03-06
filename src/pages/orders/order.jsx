@@ -79,9 +79,14 @@ const OrderPage = () => {
 
   const closeModal = () => setSelectedOrder(null);
 
-  const getStatusStep = (status) => {
-    const stepIndex = steps.indexOf(status);
-    return stepIndex !== -1 ? stepIndex : 0;
+  const getStatusStep = (orderId) => {
+    if (!orderDetails[orderId] || orderDetails[orderId].length === 0) return 0;
+
+    // Extract status from the first order item
+    const orderItemStatus = orderDetails[orderId][0]?.status || "Pending";
+
+    // Find the step index based on the order item status
+    return steps.indexOf(orderItemStatus) !== -1 ? steps.indexOf(orderItemStatus) : 0;
   };
 
   if (loading) {
@@ -122,14 +127,14 @@ const OrderPage = () => {
                   <div
                     className="absolute top-1/2 left-0 h-[3px] bg-green-500 transition-all duration-500"
                     style={{
-                      width: `${(getStatusStep(order.status) / (steps.length - 1)) * 100 || 5}%`,
+                      width: `${(getStatusStep(order.order_id) / (steps.length - 1)) * 100 || 5}%`,
                     }}
                   ></div>
                   {steps.map((step, index) => (
                     <div key={step} className="relative flex flex-col items-center w-1/3">
                       <div
                         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
-                          ${index <= getStatusStep(order.status) ? "bg-green-600 border-green-600 text-white" : "bg-gray-300 border-gray-300"}
+                          ${index <= getStatusStep(order.order_id) ? "bg-green-600 border-green-600 text-white" : "bg-gray-300 border-gray-300"}
                         `}
                       />
                       <p className="text-sm mt-1">{step}</p>
@@ -163,18 +168,18 @@ const OrderPage = () => {
             {orderDetails[selectedOrder]?.length > 0 ? (
               orderDetails[selectedOrder].map((item) => (
                 <div key={item.product_id} className="flex items-center gap-4 p-3 border-b border-gray-300">
-                  {item.product ? (
-                    <>
-                      <img src={item.product.image} alt={item.product.name} className="w-16 h-16 object-cover rounded" />
-                      <div>
-                        <p className="text-gray-800 font-medium">{item.product.name}</p>
-                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                        <p className="text-green-600 font-semibold">₹{item.product.price}</p>
-                      </div>
-                    </>
+                   {item.product?.main_image ? (
+                    <img
+                      src={item.product.main_image}
+                      alt={item.product.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
                   ) : (
-                    <p className="text-gray-600">Product details not available.</p>
+                    <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                      No Image
+                    </div>
                   )}
+                  <p className="text-gray-800 font-medium">{item.product?.name || "Product not available"}</p>
                 </div>
               ))
             ) : (
