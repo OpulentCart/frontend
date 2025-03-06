@@ -178,7 +178,7 @@ function Navbar() {
                 )}
               </div>
 
-                {/* Profile Dropdown */}
+                {/* {/ Profile Dropdown /} */}
                 <div className="relative profile-dropdown">
                   <button className="text-white hover:text-yellow-500" onClick={() => setProfileOpen(!profileOpen)}>
                     <FiUser size={22} />
