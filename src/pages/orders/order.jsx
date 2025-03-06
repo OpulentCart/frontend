@@ -20,7 +20,7 @@ const OrderPage = () => {
 
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:5006/orders/", {
+        const response = await axios.get("http://13.60.181.56:5006/orders/", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setOrders(response.data.orders);
@@ -45,7 +45,7 @@ const OrderPage = () => {
     }
 
     try {
-      const response = await axios.get(`http://localhost:5006/orders/${orderId}/`, {
+      const response = await axios.get(`http://13.60.181.56:5006/orders/${orderId}/`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 
@@ -57,7 +57,7 @@ const OrderPage = () => {
       const productDetails = await Promise.all(
         items.map(async (item) => {
           try {
-            const productRes = await axios.get(`http://localhost:5004/products/${item.product_id}`, {
+            const productRes = await axios.get(`http://13.60.181.56:5004/products/${item.product_id}`, {
               headers: { Authorization: `Bearer ${authToken}` },
             });
 

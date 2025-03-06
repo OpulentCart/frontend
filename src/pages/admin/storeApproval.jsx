@@ -32,7 +32,7 @@ const ApproveStore = () => {
       setError("");
       setLoading(true);
 
-      const res = await axios.get("http://localhost:5002/vendors/", {
+      const res = await axios.get("http://13.60.181.56:5002/vendors/", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 
@@ -51,7 +51,7 @@ const ApproveStore = () => {
 
     try {
       await axios.put(
-        `http://localhost:5002/vendors/${vendorId}`,
+        `http://13.60.181.56:5002/vendors/${vendorId}`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );

@@ -14,7 +14,7 @@ function AdminOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:5006/orders/admin", {
+        const response = await axios.get("http://13.60.181.56:5006/orders/admin", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 

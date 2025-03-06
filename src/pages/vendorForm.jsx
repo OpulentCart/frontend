@@ -29,7 +29,7 @@ const VendorStoreForm = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:5004/categories/");
+        const response = await fetch("http://13.60.181.56:5004/categories/");
         if (!response.ok) throw new Error("Failed to fetch categories");
         
         const data = await response.json();
@@ -146,7 +146,7 @@ const VendorStoreForm = () => {
     formDataToSend.append("user_id", user_id);
 
     try {
-      const response = await fetch("http://localhost:5002/vendors/create_store/", {
+      const response = await fetch("http://13.60.181.56:5002/vendors/create_store/", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${authToken}`,

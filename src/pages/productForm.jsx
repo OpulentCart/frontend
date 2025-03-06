@@ -25,7 +25,7 @@ const MultiStepProductForm = () => {
     
         const fetchVendorData = async () => {
             try {
-                const response = await axios.get("http://localhost:5002/vendors/stores", {
+                const response = await axios.get("http://13.60.181.56:5002/vendors/stores", {
                     headers: {
                         Authorization: `Bearer ${authToken}`,
                         "Content-Type": "application/json",
@@ -53,7 +53,7 @@ const MultiStepProductForm = () => {
         const fetchSubcategories = async () => {
             try {
                 console.log("Fetching subcategories for category ID:", categoryId);
-                const response = await axios.get("http://localhost:5004/subcategories", {
+                const response = await axios.get("http://13.60.181.56:5004/subcategories", {
                     headers: { Authorization: `Bearer ${authToken}` },
                 });
     
@@ -109,7 +109,7 @@ const MultiStepProductForm = () => {
         });
 
         try {
-            const response = await axios.post("http://localhost:5004/products/create", productData, {
+            const response = await axios.post("http://13.60.181.56:5004/products/create", productData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     Authorization: `Bearer ${authToken}`,

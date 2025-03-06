@@ -35,7 +35,7 @@ const CartSidebar = ({ closeSidebar }) => {
         setLoading(true);
         setError(null);
 
-        const cartResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
+        const cartResponse = await axios.get(`http://13.60.225.121:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
@@ -47,7 +47,7 @@ const CartSidebar = ({ closeSidebar }) => {
         }
 
         const productRequests = cartItemsData.map(async (item) => {
-          const productRes = await axios.get(`http://localhost:5004/products/${item.product_id}`, {
+          const productRes = await axios.get(`http://13.60.181.56:5004/products/${item.product_id}`, {
             headers: { Authorization: `Bearer ${authToken}` },
           });
 
@@ -90,7 +90,7 @@ const CartSidebar = ({ closeSidebar }) => {
     }
 
     try {
-      await axios.delete(`http://localhost:5007/cart-items/${cartItemId}`, {
+      await axios.delete(`http://13.60.225.121:5007/cart-items/${cartItemId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 
@@ -107,7 +107,7 @@ const CartSidebar = ({ closeSidebar }) => {
 
     try {
       await axios.put(
-        `http://localhost:5007/cart-items/${cartItemId}`,
+        `http://13.60.225.121:5007/cart-items/${cartItemId}`,
         { quantity: newQuantity },
         {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -200,7 +200,7 @@ const CartSidebar = ({ closeSidebar }) => {
   
       // Step 2: Proceed with the checkout process
       const response = await axios.post(
-        "http://localhost:5009/api/payment/create-checkout-session",
+        "http://13.60.225.121:5009/api/payment/create-checkout-session",
         orderData,
         {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -217,7 +217,7 @@ const CartSidebar = ({ closeSidebar }) => {
       }
   
       // Step 3: If payment is successful, delete cart items
-      await axios.delete(`http://localhost:5007/carts`,  { user_id: userId }, {
+      await axios.delete(`http://13.60.225.121:5007/carts`,  { user_id: userId }, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
   

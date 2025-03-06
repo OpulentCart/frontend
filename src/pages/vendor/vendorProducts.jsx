@@ -49,7 +49,7 @@ const VendorProducts = () => {
       console.log("Updated Product Data:", JSON.stringify(updatedProduct, null, 2));
   
       const res = await axios.put(
-        `http://localhost:5004/products/details/${productId}`,
+        `http://13.60.181.56:5004/products/details/${productId}`,
         { 
           product_id: productId, 
           ...updatedProduct 
@@ -93,7 +93,7 @@ const VendorProducts = () => {
   const fetchVendorProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5004/products/vendor/", {
+      const res = await axios.get("http://13.60.181.56:5004/products/vendor/", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       if (res.data.products) {
@@ -117,7 +117,7 @@ const VendorProducts = () => {
   
     try {
       setLoadingDetails(true);
-      const res = await axios.get(`http://localhost:5004/products/${productId}`, {
+      const res = await axios.get(`http://13.60.181.56:5004/products/${productId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
   
@@ -141,7 +141,7 @@ const VendorProducts = () => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
   
     try {
-      const res = await axios.delete(`http://localhost:5004/products/${productId}`, {
+      const res = await axios.delete(`http://13.60.181.56:5004/products/${productId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       await axios.delete(`http://127.0.0.1:8001/products/${productId}/embeddings/delete/`, {

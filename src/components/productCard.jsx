@@ -7,9 +7,9 @@ import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 import debounce from "lodash/debounce";
 
-const API_URL = "http://localhost:5007/cart-items";
+const API_URL = "http://13.60.225.121:5007/cart-items";
 const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
-const WISHLIST_API = "http://localhost:5004/wishlist";
+const WISHLIST_API = "http://13.60.181.56:5004/wishlist";
 
 const ProductCard = ({ product, onLike }) => {
   const [liked, setLiked] = useState(false);
@@ -39,7 +39,7 @@ const ProductCard = ({ product, onLike }) => {
           if (!userId) return;
 
           const createResponse = await axios.post(
-            "http://localhost:5007/carts",
+            "http://13.60.225.121:5007/carts",
             { user_id: userId },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
@@ -121,7 +121,7 @@ const ProductCard = ({ product, onLike }) => {
       let cartId = sessionStorage.getItem("cart_id");
 
       if (!cartId || cartId === "undefined") {
-        const response = await axios.get("http://localhost:5007/carts", {
+        const response = await axios.get("http://13.60.225.121:5007/carts", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
@@ -129,7 +129,7 @@ const ProductCard = ({ product, onLike }) => {
 
         if (!cartId) {
           const createResponse = await axios.post(
-            "http://localhost:5007/carts",
+            "http://13.60.225.121:5007/carts",
             { user_id: userId },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );

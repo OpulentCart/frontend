@@ -29,7 +29,7 @@ const VendorDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:5002/vendors/sales/dashboard/", {
+        const res = await axios.get("http://13.60.181.56:5002/vendors/sales/dashboard/", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 

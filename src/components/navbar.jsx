@@ -34,7 +34,7 @@ function Navbar() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get("http://localhost:5008/notifications", {
+      const response = await axios.get("http://13.60.225.121:5008/notifications", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       const fetchedNotifications = response.data.notifications || [];
@@ -47,7 +47,7 @@ function Navbar() {
 
   useEffect(() => {
     if (authToken) {
-      const newSocket = io("http://localhost:5008");
+      const newSocket = io("http://13.60.225.121:5008");
       setSocket(newSocket);
 
       // Handle new notifications
@@ -65,7 +65,7 @@ function Navbar() {
    const markAllAsRead = async (notifId) => {
     try {
       const response = await axios.put(
-        "http://localhost:5008/notifications",{},
+        "http://13.60.225.121:5008/notifications",{},
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
 

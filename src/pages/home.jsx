@@ -122,7 +122,7 @@ function HomePage() {
 
       try {
         // Fetch existing cart
-        const response = await axios.get("http://localhost:5007/carts", {
+        const response = await axios.get("http://13.60.225.121:5007/carts", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
@@ -135,7 +135,7 @@ function HomePage() {
 
           // Create a new cart
           const createCartResponse = await axios.post(
-            "http://localhost:5007/carts",
+            "http://13.60.225.121:5007/carts",
             { user_id: userId },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );

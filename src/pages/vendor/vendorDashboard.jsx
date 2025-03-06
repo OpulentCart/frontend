@@ -44,7 +44,7 @@ const VendorDashboard = () => {
 
   const fetchVendorStores = async () => {
     try {
-      const res = await axios.get(`http://localhost:5002/vendors/${vendorId}/stores`, {
+      const res = await axios.get(`http://13.60.181.56:5002/vendors/${vendorId}/stores`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setStores(res.data.stores);
@@ -63,7 +63,7 @@ const VendorDashboard = () => {
 
   const fetchVendorProducts = async () => {
     try {
-      const res = await axios.get(`http://localhost:5002/vendor/${vendorId}`, {
+      const res = await axios.get(`http://13.60.181.56:5002/vendor/${vendorId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 
@@ -94,7 +94,7 @@ const VendorDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await axios.get("http://localhost:5002/vendors/dashboard/", {
+      const res = await axios.get("http://13.60.181.56:5002/vendors/dashboard/", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
 

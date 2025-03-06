@@ -17,7 +17,7 @@ const StoresList = () => {
 
     const fetchStores = async () => {
       try {
-        const response = await axios.get("http://localhost:5002/vendors/stores/", {
+        const response = await axios.get("http://13.60.181.56:5002/vendors/stores/", {
           headers: {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",

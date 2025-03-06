@@ -39,7 +39,7 @@ function LoginPage() {
         dispatch(login({ access: data.access, refresh: data.refresh, role: data.role }));
   
         // ✅ Fetch cart_id separately
-        const cartResponse = await fetch("http://localhost:5007/carts", {
+        const cartResponse = await fetch("http://13.60.225.121:5007/carts", {
           method: "GET",
           headers: {     
             Authorization: `Bearer ${data.access}`,

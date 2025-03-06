@@ -18,7 +18,7 @@ const Wishlist = () => {
     if (!authToken) return;
 
     try {
-      const response = await axios.get("http://localhost:5004/wishlist", {
+      const response = await axios.get("http://13.60.181.56:5004/wishlist", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setWishlist(response.data?.data || []);
@@ -33,7 +33,7 @@ const Wishlist = () => {
 
   const removeFromWishlist = async (wishlistId) => {
     try {
-      await axios.delete(`http://localhost:5004/wishlist/${wishlistId}`, {
+      await axios.delete(`http://13.60.181.56:5004/wishlist/${wishlistId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
   
@@ -48,7 +48,7 @@ const Wishlist = () => {
   const handleAddToCart = async (productId) => {
     try {
       await axios.post(
-        "http://localhost:5007/cart-items",
+        "http://13.60.225.121:5007/cart-items",
         { product_id: productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );

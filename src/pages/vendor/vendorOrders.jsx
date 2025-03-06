@@ -15,7 +15,7 @@ const VendorOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:5006/orders/vendor", {
+        const response = await axios.get("http://13.60.181.56:5006/orders/vendor", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
@@ -26,7 +26,7 @@ const VendorOrders = () => {
             orderedProducts.map(async (order) => {
               try {
                 const productResponse = await axios.get(
-                  `http://localhost:5004/products/${order.product_id}`,
+                  `http://13.60.181.56:5004/products/${order.product_id}`,
                   { headers: { Authorization: `Bearer ${authToken}` } }
                 );
                 return {
@@ -59,7 +59,7 @@ const VendorOrders = () => {
       console.log("Updating order ID:", orderItemId);
 
       await axios.put(
-        `http://localhost:5006/orders/${orderItemId}`, // Use order_item_id
+        `http://13.60.181.56:5006/orders/${orderItemId}`, // Use order_item_id
         { status: newStatus },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );

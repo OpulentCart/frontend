@@ -32,7 +32,7 @@ const ProductDetails = () => {
 
 
   const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
-  const API_URL = "http://localhost:5007/cart-items";
+  const API_URL = "http://13.60.225.121:5007/cart-items";
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -76,7 +76,7 @@ const ProductDetails = () => {
       }
 
       try {
-        const productResponse = await axios.get(`http://localhost:5004/products/${id}`, {
+        const productResponse = await axios.get(`http://13.60.181.56:5004/products/${id}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setProduct(productResponse.data.product);
@@ -225,7 +225,7 @@ const ProductDetails = () => {
       let cartId = sessionStorage.getItem("cart_id");
 
       if (!cartId || cartId === "undefined") {
-        const response = await axios.get("http://localhost:5007/carts", {
+        const response = await axios.get("http://13.60.225.121:5007/carts", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
@@ -233,7 +233,7 @@ const ProductDetails = () => {
 
         if (!cartId) {
           const createResponse = await axios.post(
-            "http://localhost:5007/carts",
+            "http://13.60.225.121:5007/carts",
             { user_id: userId },
             { headers: { Authorization: `Bearer ${authToken}` } }
           );

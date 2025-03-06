@@ -24,7 +24,7 @@ const AdminProductApproval = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5004/products/admin/products",{
+      const res = await axios.get("http://13.60.181.56:5004/products/admin/products",{
         headers:{Authorization: `Bearer ${authToken}`}
       });
 
@@ -60,7 +60,7 @@ const AdminProductApproval = () => {
   const updateProductStatus = async (id, status) => {
     try {
       setUpdatingId(id);
-      await axios.put(`http://localhost:5004/products/${id}`, { status }, {
+      await axios.put(`http://13.60.181.56:5004/products/${id}`, { status }, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
 

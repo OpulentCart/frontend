@@ -35,7 +35,7 @@ const AdminDashboard = () => {
 
   const fetchStores = async () => {
     try {
-      const res = await axios.get("http://localhost:5004/stores/pending");
+      const res = await axios.get("http://13.60.181.56:5004/stores/pending");
       setStores(res.data.stores);
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -44,7 +44,7 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5004/products/pending");
+      const res = await axios.get("http://13.60.181.56:5004/products/pending");
       setProducts(res.data.products);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -53,7 +53,7 @@ const AdminDashboard = () => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get("http://localhost:5004/notifications");
+      const res = await axios.get("http://13.60.181.56:5004/notifications");
       setNotifications(res.data.notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);

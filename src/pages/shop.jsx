@@ -48,13 +48,13 @@ const Shop = () => {
     const fetchData = async () => {
       try {
         const [categoriesRes, subcategoriesRes, productsRes] = await Promise.all([
-          axios.get("http://localhost:5004/categories/", {
+          axios.get("http://13.60.181.56:5004/categories/", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
-          axios.get("http://localhost:5004/subcategories", {
+          axios.get("http://13.60.181.56:5004/subcategories", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
-          axios.get("http://localhost:5004/products/customer/products", {
+          axios.get("http://13.60.181.56:5004/products/customer/products", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
         ]);
@@ -86,7 +86,7 @@ const Shop = () => {
       if (!cartId && authToken) {
         try {
           const response = await axios.post(
-            "http://localhost:5007/carts",
+            "http://13.60.225.121:5007/carts",
             {}, // No need to pass user_id as authToken
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
@@ -114,7 +114,7 @@ const Shop = () => {
       if (!cartId || !authToken) return;
   
       try {
-        const cartResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
+        const cartResponse = await axios.get(`http://:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
   
@@ -164,14 +164,14 @@ const Shop = () => {
   
     try {
       const response = await axios.post(
-        `http://localhost:5007/cart-items/add`,
+        `http://13.60.225.121:5007/cart-items/add`,
         { cart_id: cartId, product_id: productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
   
       if (response.data.success) {
         // Fetch updated cart items only after successful addition
-        const updatedCartItemsResponse = await axios.get(`http://localhost:5007/cart-items/${cartId}`, {
+        const updatedCartItemsResponse = await axios.get(`http://13.60.225.121:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
   
