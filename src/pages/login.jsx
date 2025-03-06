@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login, setCartId } from "../redux/slices/authSlice"; // Import Redux action
 import showToast from "../components/showToast";
+import { jwtDecode } from "jwt-decode";
 
 function LoginPage() {
   const authToken = useSelector((state) => state.auth.access_token);

@@ -217,7 +217,7 @@ const CartSidebar = ({ closeSidebar }) => {
       }
   
       // Step 3: If payment is successful, delete cart items
-      await axios.delete(`http://localhost:5007/carts`, {
+      await axios.delete(`http://localhost:5007/carts`,  { user_id: userId }, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
   
