@@ -18,7 +18,7 @@ function Profile() {
     const fetchUserProfile = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/auth/user-profile/",
+          "http://98.81.204.61:8000/api/auth/user-profile/",
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -46,10 +46,10 @@ function Profile() {
 
           try {
             const [storesResponse, productsResponse] = await Promise.all([
-              axios.get("http://127.0.0.1:8000/api/vendor/stores/", {
+              axios.get("http://98.81.204.61:8000/api/vendor/stores/", {
                 headers: { Authorization: `Bearer ${authToken}` },
               }).catch(() => ({ data: { total_stores: 0 } })),
-              axios.get("http://127.0.0.1:8000/api/vendor/products/", {
+              axios.get("http://98.81.204.61:8000/api/vendor/products/", {
                 headers: { Authorization: `Bearer ${authToken}` },
               }).catch(() => ({ data: { total_products: 0 } })),
             ]);

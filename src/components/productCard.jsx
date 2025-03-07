@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import debounce from "lodash/debounce";
 
 const API_URL = "http://13.60.225.121:5007/cart-items";
-const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
+const INTERACTION_API_URL = "http://98.81.204.61:8002/add_interaction/";
 const WISHLIST_API = "http://13.60.181.56:5004/wishlist";
 
 const ProductCard = ({ product, onLike }) => {

@@ -114,7 +114,7 @@ const Shop = () => {
       if (!cartId || !authToken) return;
   
       try {
-        const cartResponse = await axios.get(`http://:5007/cart-items/${cartId}`, {
+        const cartResponse = await axios.get(`http://13.60.225.121:5007/cart-items/${cartId}`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
   

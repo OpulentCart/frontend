@@ -21,7 +21,7 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/auth/all-users/", {
+      const res = await axios.get("http://98.81.204.61:8000/api/auth/all-users/", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setUsers(res.data.users);

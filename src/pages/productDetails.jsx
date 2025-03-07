@@ -31,7 +31,7 @@ const ProductDetails = () => {
   const [cartMessage, setCartMessage] = useState("");
 
 
-  const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
+  const INTERACTION_API_URL = "http://98.81.204.61:8002/add_interaction/";
   const API_URL = "http://13.60.225.121:5007/cart-items";
 
   useEffect(() => {
@@ -89,7 +89,7 @@ const ProductDetails = () => {
       }
 
       try {
-        const similarResponse = await axios.get(`http://127.0.0.1:8001/related-products/${id}/`, {
+        const similarResponse = await axios.get(`http://98.81.204.61:8001/related-products/${id}/`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         const similarData = Array.isArray(similarResponse.data.related_products)
@@ -114,7 +114,7 @@ const ProductDetails = () => {
 
       if (userId) {
         try {
-          const hybridResponse = await axios.get(`http://127.0.0.1:8002/hybrid/${userId}/${id}/`, {
+          const hybridResponse = await axios.get(`http://98.81.204.61:8002/hybrid/${userId}/${id}/`, {
             headers: { Authorization: `Bearer ${authToken}` },
           });
           const recommendedData = Array.isArray(hybridResponse.data.recommended_products)

@@ -24,7 +24,7 @@ function EditProfile() {
     const fetchUserProfile = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/auth/user-profile/",
+          "http://98.81.204.61:8000/api/auth/user-profile/",
           {
             headers: { Authorization: `Bearer ${authToken}` },
           }
@@ -59,7 +59,7 @@ function EditProfile() {
     setSuccessMessage("");
 
     try {
-      await axios.put("http://127.0.0.1:8000/api/auth/update-profile/", formData, {
+      await axios.put("http://98.81.204.61:8000/api/auth/update-profile/", formData, {
         headers: {
           Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json",

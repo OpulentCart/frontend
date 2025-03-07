@@ -66,7 +66,7 @@ const AdminDashboard = () => {
         console.error("Auth token is missing");
         return;
       }
-      const res = await axios.get("http://127.0.0.1:8000/api/auth/user-counts/", {
+      const res = await axios.get("http://98.81.204.61:8000/api/auth/user-counts/", {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       setUserCounts(res.data);

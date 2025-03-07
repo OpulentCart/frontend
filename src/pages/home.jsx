@@ -67,7 +67,7 @@ function HomePage() {
   const [errorRecommendations, setErrorRecommendations] = useState(null);
   const [cartId, setCartId] = useState(() => sessionStorage.getItem("cartId") || "");
 
-  const INTERACTION_API_URL = "http://127.0.0.1:8002/add_interaction/";
+  const INTERACTION_API_URL = "http://98.81.204.61:8002/add_interaction/";
 
   const featuredProducts = [
     {
@@ -177,7 +177,7 @@ function HomePage() {
       }
 
       try {
-        const response = await axios.get(`http://127.0.0.1:8003/recommendations/${userId}/`, {
+        const response = await axios.get(`http://98.81.204.61:8003/recommendations/${userId}/`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         console.log("Recommendations Response:", response.data);

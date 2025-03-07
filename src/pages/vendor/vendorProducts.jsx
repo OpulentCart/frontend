@@ -144,7 +144,7 @@ const VendorProducts = () => {
       const res = await axios.delete(`http://13.60.181.56:5004/products/${productId}`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      await axios.delete(`http://127.0.0.1:8001/products/${productId}/embeddings/delete/`, {
+      await axios.delete(`http://98.81.204.61:8001/products/${productId}/embeddings/delete/`, {
       });
   
       if (res.status === 200) {

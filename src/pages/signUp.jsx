@@ -59,7 +59,7 @@ function SignupPage() {
 
     try {
       setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/api/auth/register/", {
+      const response = await fetch("http://98.81.204.61:8000/api/auth/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name, password, role }),
@@ -95,7 +95,7 @@ function SignupPage() {
 
     try {
       setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/api/auth/verify-otp/", {
+      const response = await fetch("http://98.81.204.61:8000/api/auth/verify-otp/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otpCode }),
