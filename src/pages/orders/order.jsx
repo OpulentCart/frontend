@@ -180,6 +180,8 @@ const OrderPage = () => {
                     </div>
                   )}
                   <p className="text-gray-800 font-medium">{item.product?.name || "Product not available"}</p>
+                  <p className="text-green-800 font-medium">{item.quantity}</p>
+                  <p className="text-yellow-800 font-medium">{item.status}</p>
                 </div>
               ))
             ) : (
